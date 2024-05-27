@@ -174,7 +174,7 @@ MyBackup can also rotate the old snapshots based on the sequence using just a nu
 
 Defined by option "**compress**".
 
-It will compress the snapshot file as a GZ file. The ".gz" will be added to snapshot file.
+It will compress the snapshot file as a GZ file. The ".gz" extension will be added to snapshot file.
 
 
 ### Check replication
