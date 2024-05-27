@@ -138,14 +138,15 @@ Indicate the connection options. The only supported drivers are "mysql" and "mar
 The possible options are:
 
 ```YAML
-driver: 'mysql'
-url: ''
-host: '127.0.0.1'
-port: '3306'
-database: 'laravel'
-username: 'root'
-password: ''
-unix_socket: ''
+connection:
+    driver: 'mysql'
+    url: ''
+    host: '127.0.0.1'
+    port: '3306'
+    database: 'laravel'
+    username: 'root'
+    password: ''
+    unix_socket: ''
 ```
 ### MySQLDump path
 
@@ -181,9 +182,9 @@ It will compress the snapshot file as a GZ file. The ".gz" extension will be add
 
 Defined by option "**is_replica**".
 
-If the backup is taken from a read replica it's very recommended to check if the replica is running before to perform the backup, so it will avoid to dump snapshots from a server that is not synchronised with the master.
+If the backup is taken from a read replica it's recommended to check if the replica is running before to perform the backup, so it will avoid to dump snapshots from a server that is not synchronised with the master.
 
-When this option is equal to `true` and the read-replica is not running or not reading binlogs from the master server it will stop the backup process.
+When this option is equal to `true` and the read-replica is not running or not reading the binlogs from the master server it will stop the backup process.
 
 
 ### Define objets to dump
@@ -300,7 +301,7 @@ It will perform additional operations after the full snapshot was dumped.
 
 The available post actions are:
 - copy (Copy a file)
-- delete_old (Delete/Rotate an old file).
+- delete_old (Delete an old file).
 
 ## Placeholders
 
