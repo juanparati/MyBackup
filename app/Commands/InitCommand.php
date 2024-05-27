@@ -5,9 +5,7 @@ namespace App\Commands;
 use App\Models\Config;
 use App\Models\Enums\FilePathScope;
 use App\Models\FilePath;
-use Faker\Core\File;
 use Illuminate\Console\Concerns\PromptsForMissingInput;
-use LaravelZero\Framework\Commands\Command;
 use Symfony\Component\Yaml\Yaml;
 
 class InitCommand extends BackupCommand implements \Illuminate\Contracts\Console\PromptsForMissingInput
@@ -65,5 +63,7 @@ class InitCommand extends BackupCommand implements \Illuminate\Contracts\Console
 
         file_put_contents($configFile, Yaml::dump($config));
         $this->output->success('📝 Plan created');
+
+        return EXIT_SUCCESS;
     }
 }
