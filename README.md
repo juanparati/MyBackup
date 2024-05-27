@@ -1,10 +1,11 @@
+# MyBackup
+
        __  ___     ___           __           
       /  |/  /_ __/ _ )___ _____/ /____ _____
      / /|_/ / // / _  / _ `/ __/  '_/ // / _ \
     /_/  /_/\_, /____/\_,_/\__/_/\_\\_,_/ .__/
            /___/ MySQL/MariaDB backup  /_/
 
-# MyBackup
 
 ## What is it?
 
@@ -29,11 +30,17 @@ A backup tool for MySQL/MariaDB that support the following features:
         mybackup init backup_plan.yaml
 
 2. Edit the backup plan configuration file.
-3. Run the backup process:
+3. Verify backup and simulate backup process:
+
+        mybackup backup backup_plan.yaml --dry
+
+4. Run the backup process:
     
         mybackup backup backup_plan.yaml
 
-### Backup plan example
+## Backup plan and options
+
+An example of a complete backup plan may look like the following one:
 
 ```YAML
 name: "Backup plan"
@@ -52,10 +59,11 @@ is_replica: true                                      # It will check if read-re
 databases:
   - firstdb                                           # It will dump the entire "firstdb" database
   - secondb:                                          # It will dump "seconddb" database with custom options and ignoring some tables
-      options: ["--single-transaction", "--quick"]
+      options: ["--single-transaction", "--quick", "--compress"]
       ignore: ["table1", "table2"]
   - thirddb:                                          # It will dump some tables of "thirddb" database.
       options: ["--single-transaction", "--quick"]
+      to: firstdb                                     # It will copy the tables into the "firstdb"
       tables:
         - table1:
             where: "id >= 1000000"
@@ -103,5 +111,78 @@ post_actions:
         period: '3 days'
 ```
 
+### Catalog file
 
+Defined by option "**catalog_file**".
 
+It's a sqlite file that save the historical list of the previous completed backups and the lock information.
+The lock information will avoid overlap two or more backups process over the same backup plan.
+The catalog file is created automatically when it's missing.
+
+### Snapshot file
+
+Defined by option "**snapshot_file**".
+
+It's the destination of the backup snapshot. In case that file is compressed and/or encrypted the file will hava the additional extensions.
+
+### Connection
+
+Defined by option "**connection**".
+
+Indicate the connection options the only supported drivers are "mysql" and "mariadb", however MariaDB also works with "mysql" driver.
+
+The possible options are:
+
+```YAML
+driver: 'mysql',
+url: '',
+host: '127.0.0.1',
+port: '3306',
+database: 'laravel',
+username: 'root'),
+password: '',
+unix_socket: '',
+```
+### MySQLDump path
+
+Defined by option "**mysqldump_path**".
+
+MyBackup uses internally "mysqldump" and "mariadb-dump" tools. If the full path to the dump tool is not supplied then MyBackup will attempt to find the path the to tool.
+
+Example:
+
+```YAML
+mysqldump_path: "mariadb-dump"    # It will attempt to find the path to mariadb-dump
+```
+
+### Backup rotation
+
+Defined by option "**backup_rotation**".
+
+It will remove the old snapshots from the local filesystem. 
+
+MyBackup can rotate the old snapshots based on a relative time reference indicating a time reference like for example: "1 day", "2 days", "3 weeks", "1 month", etc.
+
+MyBackup can also rotate the old snapshots based on the sequence using just a number. So for example 2 will indicate that MyBackup will keep the last 2 previous backups.
+
+### Compress
+
+Defined by option "**compress**".
+
+It will compress the snapshot file as a GZ file. The ".gz" will be added to snapshot file.
+
+### Check replication
+
+Defined by option "**is_replica**".
+
+If the backup is taken from a read replica it's very recommended to check if the replica is running before to perform the backup, so it will avoid to dump snapshots from a server that is not synchronised with the master.
+
+When this option is equal to true and the read-replica is not running or not reading binlogs from the master server it will stop the backup process.
+
+### Define objets to dump
+
+Defined by option "**databases**".
+
+Define which databases or selected tables are dumped into the snapshot.
+
+See [Backup plan and options for examples](#backup-plan-and-options).
