@@ -25,7 +25,9 @@ class BackupCommand extends CommandBase
      *
      * @var string
      */
-    protected $signature = 'backup {config_file : configuration file}';
+    protected $signature = 'backup {config_file : configuration file}
+        {--dry : Do not perform backup}
+    ';
 
     /**
      * The description of the command.
@@ -57,17 +59,19 @@ class BackupCommand extends CommandBase
         $this->prepareCatalog();
         $this->setupFilesystems();
 
-        $this->newLine()->info('Checking lock...');
+        if (!$this->option('dry')) {
+            $this->newLine()->info('Checking lock...');
 
-        if (Lock::hasLock()) {
-            $this->error('Backup process is locked');
-            $this->line('If the backup failed run '.EXECUTABLE.' unlock '.$this->argument('config_file'));
+            if (Lock::hasLock()) {
+                $this->error('Backup process is locked');
+                $this->line('If the backup failed run ' . EXECUTABLE . ' unlock ' . $this->argument('config_file'));
 
-            return 0;
+                return 0;
+            }
+
+            Lock::lock();
+            $this->line('🔒 Lock created');
         }
-
-        Lock::lock();
-        $this->line('🔒 Lock created');
 
         try {
             $exitCode = $this->executeTasks();
@@ -76,8 +80,10 @@ class BackupCommand extends CommandBase
             $exitCode = EXIT_FAILURE;
         }
 
-        Lock::unlock();
-        $this->info('Lock destroyed');
+        if (!$this->option('dry')) {
+            Lock::unlock();
+            $this->info('Lock destroyed');
+        }
 
         return $exitCode;
 
@@ -181,96 +187,98 @@ class BackupCommand extends CommandBase
             }
         }
 
-        $this->newLine()->info('Dumping snapshot, please be patience...');
-        $dump->initialize()->process($this->output);
-        $this->newLine()->line('Snapshot saved');
+        if (!$this->option('dry')) {
+            $this->newLine()->info('Dumping snapshot, please be patience...');
+            $dump->initialize()->process($this->output);
+            $this->newLine()->line('Snapshot saved');
 
-        // Compress snapshot if proceeds
-        if ($this->config->compress) {
-            $compressedSnapshot = FilePath::fromPath($snapshotFile->absolutePath().'.gz');
-            $this->newLine()->info('Compressing snapshot...');
-            (new GzipCompressor($snapshotFile->absolutePath(), $compressedSnapshot->path()))
-                ->gzip($this->config->compression_level ?: 6, $this->output);
-            $snapshotFile->rm();
-            $snapshotFile = $compressedSnapshot;
-            unset($compressedSnapshot);
-            $this->newLine()->line('Snapshot was compressed as: '.$snapshotFile->absolutePath());
-        }
-
-        // Encrypt snapshot if proceeds
-        if ($this->config->encryption['key'] ?? null) {
-            $this->newLine()->info('Encrypting snapshot...');
-            $encryptedSnapshot = FilePath::fromPath($snapshotFile->absolutePath().'.aes');
-            $encrypted = FileEncrypt::encrypt(
-                $snapshotFile->absolutePath(),
-                $encryptedSnapshot->path(),
-                $this->config->encryption['key'],
-                $this->config->encryption['method'] ?? 'AES-128-CBC',
-                $this->output
-            );
-
-            if (! $encrypted) {
-                $this->error('Unable to encrypt snapshot file');
-
-                return EXIT_FAILURE;
+            // Compress snapshot if proceeds
+            if ($this->config->compress) {
+                $compressedSnapshot = FilePath::fromPath($snapshotFile->absolutePath() . '.gz');
+                $this->newLine()->info('Compressing snapshot...');
+                (new GzipCompressor($snapshotFile->absolutePath(), $compressedSnapshot->path()))
+                    ->gzip($this->config->compression_level ?: 6, $this->output);
+                $snapshotFile->rm();
+                $snapshotFile = $compressedSnapshot;
+                unset($compressedSnapshot);
+                $this->newLine()->line('Snapshot was compressed as: ' . $snapshotFile->absolutePath());
             }
 
-            $snapshotFile->rm();
-            $snapshotFile = $encryptedSnapshot;
-            unset($encryptedSnapshot);
-            $this->newLine()->line('Snapshot was encrypted as: '.$snapshotFile->absolutePath());
+            // Encrypt snapshot if proceeds
+            if ($this->config->encryption['key'] ?? null) {
+                $this->newLine()->info('Encrypting snapshot...');
+                $encryptedSnapshot = FilePath::fromPath($snapshotFile->absolutePath() . '.aes');
+                $encrypted = FileEncrypt::encrypt(
+                    $snapshotFile->absolutePath(),
+                    $encryptedSnapshot->path(),
+                    $this->config->encryption['key'],
+                    $this->config->encryption['method'] ?? 'AES-128-CBC',
+                    $this->output
+                );
 
-        }
+                if (!$encrypted) {
+                    $this->error('Unable to encrypt snapshot file');
 
-        // Save last snapshot into the catalog
-        $this->newLine()->info('Registering snapshot into the catalog...');
+                    return EXIT_FAILURE;
+                }
 
-        $snapshotInfo = [
-            'snapshot' => $snapshotFile->absolutePath(),
-            'crc' => $snapshotFile->md5(),
-            'size' => $snapshotFile->size(),
-        ];
+                $snapshotFile->rm();
+                $snapshotFile = $encryptedSnapshot;
+                unset($encryptedSnapshot);
+                $this->newLine()->line('Snapshot was encrypted as: ' . $snapshotFile->absolutePath());
 
-        $lastCreatedCatalog = Catalog::create($snapshotInfo);
-        $this->line('Registered snapshot CRC: '.$snapshotInfo['crc']);
-
-        // Rotate backups
-        if ($this->config->backup_rotation !== null) {
-            $this->newLine()->info('Rotating backups...');
-            if (is_int($this->config->backup_rotation) || ctype_digit($this->config->backup_rotation)) {
-                $catalogItems = Catalog::query()
-                    ->where('id', '<', $lastCreatedCatalog->id)
-                    ->limit((int) $this->config->backup_rotation)
-                    ->get();
-            } else {
-                $catalogItems = Catalog::query()
-                    ->where('created_at', '<=', DeclarativeHumanDate::relative($this->config->backup_rotation))
-                    ->orderByDesc('created_at')
-                    ->get();
             }
 
-            foreach ($catalogItems as $catalogItem) {
-                @unlink($catalogItem->snapshot);
-                $catalogItem->delete();
-                $this->line('- Removed: '.$catalogItem->snapshot);
+            // Save last snapshot into the catalog
+            $this->newLine()->info('Registering snapshot into the catalog...');
+
+            $snapshotInfo = [
+                'snapshot' => $snapshotFile->absolutePath(),
+                'crc'      => $snapshotFile->md5(),
+                'size'     => $snapshotFile->size(),
+            ];
+
+            $lastCreatedCatalog = Catalog::create($snapshotInfo);
+            $this->line('Registered snapshot CRC: ' . $snapshotInfo['crc']);
+
+            // Rotate backups
+            if ($this->config->backup_rotation !== null) {
+                $this->newLine()->info('Rotating backups...');
+                if (is_int($this->config->backup_rotation) || ctype_digit($this->config->backup_rotation)) {
+                    $catalogItems = Catalog::query()
+                        ->where('id', '<', $lastCreatedCatalog->id)
+                        ->limit((int)$this->config->backup_rotation)
+                        ->get();
+                } else {
+                    $catalogItems = Catalog::query()
+                        ->where('created_at', '<=', DeclarativeHumanDate::relative($this->config->backup_rotation))
+                        ->orderByDesc('created_at')
+                        ->get();
+                }
+
+                foreach ($catalogItems as $catalogItem) {
+                    @unlink($catalogItem->snapshot);
+                    $catalogItem->delete();
+                    $this->line('- Removed: ' . $catalogItem->snapshot);
+                }
+
+                $this->line('Rotated backup elements');
             }
 
-            $this->line('Rotated backup elements');
-        }
+            // Execute post actions
+            if ($this->config->post_actions) {
+                $this->runActions([
+                    'snapshot_file' => $snapshotInfo['snapshot'],
+                    'crc'           => $snapshotInfo['crc'],
+                ]);
+            }
 
-        // Execute post actions
-        if ($this->config->post_actions) {
-            $this->runActions([
-                'snapshot_file' => $snapshotInfo['snapshot'],
-                'crc' => $snapshotInfo['crc'],
-            ]);
+            // Send notification
+            (new NotificationSender($this->config->notifications ?? []))
+                ->send(BackupFinishedNotification::class, $snapshotInfo);
         }
 
         $this->output->success('👍 Backup process was successfully finished!');
-
-        // Send notification
-        (new NotificationSender($this->config->notifications ?? []))
-            ->send(BackupFinishedNotification::class, $snapshotInfo);
 
         return EXIT_SUCCESS;
 

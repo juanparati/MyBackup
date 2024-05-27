@@ -37,7 +37,7 @@ abstract class CommandBase extends Command implements \Illuminate\Contracts\Cons
             return $e->getCode();
         }
 
-        $this->line('Configuration successfully read');
+        $this->line('Configuration successfully read for plan: <options=bold>' . $this->config->name . '</options=bold>');
 
         return null;
     }
