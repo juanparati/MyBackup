@@ -1,5 +1,6 @@
 <?php
-use \App\Helpers\DeclarativeHumanDate;
+
+use App\Helpers\DeclarativeHumanDate;
 
 $current = now()->toImmutable();
 

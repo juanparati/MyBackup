@@ -80,7 +80,7 @@ class DecryptCommand extends CommandBase
 
         if ($this->option('remove') && $outputFile->exists()) {
             $backupFile->rm();
-            $this->line('Original file was removed: ' . $backupFile);
+            $this->line('Original file was removed: '.$backupFile);
         }
 
         $this->line("Decrypted file as $outputFile");

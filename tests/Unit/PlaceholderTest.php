@@ -1,9 +1,9 @@
 <?php
-use \App\Models\Placeholder;
-use function Laravel\Prompts\text;
+
+use App\Models\Placeholder;
 
 $dictionary = [
-    'snapshot_file' => '/foo/bar/file123.sql'
+    'snapshot_file' => '/foo/bar/file123.sql',
 ];
 
 $placeholder = new Placeholder($dictionary);
@@ -13,13 +13,13 @@ test('replace from dictionary', function () use ($placeholder, $dictionary) {
         ->toBe($dictionary['snapshot_file']);
 });
 
-test('replace and process from dictionary', function() use ($placeholder, $dictionary) {
+test('replace and process from dictionary', function () use ($placeholder, $dictionary) {
     $repString = '/one/two space/%s_file';
 
     expect($placeholder->replace('{{basename:{{snapshot_file}}}}'))
-       ->toBe(basename($dictionary['snapshot_file']))
-       ->and($placeholder->replace(sprintf($repString, '{{basename:{{snapshot_file}}}}')))
-       ->toBe(sprintf($repString, basename($dictionary['snapshot_file'])));
+        ->toBe(basename($dictionary['snapshot_file']))
+        ->and($placeholder->replace(sprintf($repString, '{{basename:{{snapshot_file}}}}')))
+        ->toBe(sprintf($repString, basename($dictionary['snapshot_file'])));
 });
 
 test('replace by date', function () use ($placeholder) {
@@ -51,8 +51,8 @@ test('replace by numeric', function () use ($placeholder) {
 });
 
 test('replace by relative time', function () use ($placeholder) {
-   expect($placeholder->replace('{{date_calc:-1hour}}'))
-       ->toBe(now()->subHour()->toDateTimeString());
+    expect($placeholder->replace('{{date_calc:-1hour}}'))
+        ->toBe(now()->subHour()->toDateTimeString());
 });
 
 test('replace by uuid', function () use ($placeholder) {
@@ -62,7 +62,7 @@ test('replace by uuid', function () use ($placeholder) {
         ->toBeUuid();
 });
 
-test('placeholder combination', function() use ($placeholder, $dictionary) {
+test('placeholder combination', function () use ($placeholder, $dictionary) {
     $repString = 'The %s was generated at %s';
     expect($placeholder->replace(
         sprintf($repString, '{{basename:{{snapshot_file}}}}', '{{numeric:{{date:2024-01-01 00:00:00}}}}')
@@ -70,7 +70,7 @@ test('placeholder combination', function() use ($placeholder, $dictionary) {
         ->toBe(sprintf($repString, basename($dictionary['snapshot_file']), '20240101'));
 });
 
-test('placeholder combination with same pattern', function() use ($placeholder, $dictionary) {
+test('placeholder combination with same pattern', function () use ($placeholder, $dictionary) {
     $basename = basename($dictionary['snapshot_file']);
     $repString = '%s and %s';
 

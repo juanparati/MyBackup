@@ -59,12 +59,12 @@ class BackupCommand extends CommandBase
         $this->prepareCatalog();
         $this->setupFilesystems();
 
-        if (!$this->option('dry')) {
+        if (! $this->option('dry')) {
             $this->newLine()->info('Checking lock...');
 
             if (Lock::hasLock()) {
                 $this->error('Backup process is locked');
-                $this->line('If the backup failed run ' . EXECUTABLE . ' unlock ' . $this->argument('config_file'));
+                $this->line('If the backup failed run '.EXECUTABLE.' unlock '.$this->argument('config_file'));
 
                 return 0;
             }
@@ -80,7 +80,7 @@ class BackupCommand extends CommandBase
             $exitCode = EXIT_FAILURE;
         }
 
-        if (!$this->option('dry')) {
+        if (! $this->option('dry')) {
             Lock::unlock();
             $this->info('Lock destroyed');
         }
@@ -187,27 +187,27 @@ class BackupCommand extends CommandBase
             }
         }
 
-        if (!$this->option('dry')) {
+        if (! $this->option('dry')) {
             $this->newLine()->info('Dumping snapshot, please be patience...');
             $dump->initialize()->process($this->output);
             $this->newLine()->line('Snapshot saved');
 
             // Compress snapshot if proceeds
             if ($this->config->compress) {
-                $compressedSnapshot = FilePath::fromPath($snapshotFile->absolutePath() . '.gz');
+                $compressedSnapshot = FilePath::fromPath($snapshotFile->absolutePath().'.gz');
                 $this->newLine()->info('Compressing snapshot...');
                 (new GzipCompressor($snapshotFile->absolutePath(), $compressedSnapshot->path()))
                     ->gzip($this->config->compression_level ?: 6, $this->output);
                 $snapshotFile->rm();
                 $snapshotFile = $compressedSnapshot;
                 unset($compressedSnapshot);
-                $this->newLine()->line('Snapshot was compressed as: ' . $snapshotFile->absolutePath());
+                $this->newLine()->line('Snapshot was compressed as: '.$snapshotFile->absolutePath());
             }
 
             // Encrypt snapshot if proceeds
             if ($this->config->encryption['key'] ?? null) {
                 $this->newLine()->info('Encrypting snapshot...');
-                $encryptedSnapshot = FilePath::fromPath($snapshotFile->absolutePath() . '.aes');
+                $encryptedSnapshot = FilePath::fromPath($snapshotFile->absolutePath().'.aes');
                 $encrypted = FileEncrypt::encrypt(
                     $snapshotFile->absolutePath(),
                     $encryptedSnapshot->path(),
@@ -216,7 +216,7 @@ class BackupCommand extends CommandBase
                     $this->output
                 );
 
-                if (!$encrypted) {
+                if (! $encrypted) {
                     $this->error('Unable to encrypt snapshot file');
 
                     return EXIT_FAILURE;
@@ -225,7 +225,7 @@ class BackupCommand extends CommandBase
                 $snapshotFile->rm();
                 $snapshotFile = $encryptedSnapshot;
                 unset($encryptedSnapshot);
-                $this->newLine()->line('Snapshot was encrypted as: ' . $snapshotFile->absolutePath());
+                $this->newLine()->line('Snapshot was encrypted as: '.$snapshotFile->absolutePath());
 
             }
 
@@ -234,12 +234,12 @@ class BackupCommand extends CommandBase
 
             $snapshotInfo = [
                 'snapshot' => $snapshotFile->absolutePath(),
-                'crc'      => $snapshotFile->md5(),
-                'size'     => $snapshotFile->size(),
+                'crc' => $snapshotFile->md5(),
+                'size' => $snapshotFile->size(),
             ];
 
             $lastCreatedCatalog = Catalog::create($snapshotInfo);
-            $this->line('Registered snapshot CRC: ' . $snapshotInfo['crc']);
+            $this->line('Registered snapshot CRC: '.$snapshotInfo['crc']);
 
             // Rotate backups
             if ($this->config->backup_rotation !== null) {
@@ -247,7 +247,7 @@ class BackupCommand extends CommandBase
                 if (is_int($this->config->backup_rotation) || ctype_digit($this->config->backup_rotation)) {
                     $catalogItems = Catalog::query()
                         ->where('id', '<', $lastCreatedCatalog->id)
-                        ->limit((int)$this->config->backup_rotation)
+                        ->limit((int) $this->config->backup_rotation)
                         ->get();
                 } else {
                     $catalogItems = Catalog::query()
@@ -259,7 +259,7 @@ class BackupCommand extends CommandBase
                 foreach ($catalogItems as $catalogItem) {
                     @unlink($catalogItem->snapshot);
                     $catalogItem->delete();
-                    $this->line('- Removed: ' . $catalogItem->snapshot);
+                    $this->line('- Removed: '.$catalogItem->snapshot);
                 }
 
                 $this->line('Rotated backup elements');
@@ -269,7 +269,7 @@ class BackupCommand extends CommandBase
             if ($this->config->post_actions) {
                 $this->runActions([
                     'snapshot_file' => $snapshotInfo['snapshot'],
-                    'crc'           => $snapshotInfo['crc'],
+                    'crc' => $snapshotInfo['crc'],
                 ]);
             }
 

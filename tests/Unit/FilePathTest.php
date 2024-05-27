@@ -1,5 +1,6 @@
 <?php
-use \App\Models\FilePath;
+
+use App\Models\FilePath;
 
 uses(\Illuminate\Support\Facades\File::class)->in('Unit');
 
@@ -9,6 +10,5 @@ test('replace by home', function () {
     expect(FilePath::fromPath('~')->path())
         ->toBe($home)
         ->and(FilePath::fromPath('~/foo/var')->path())
-        ->toBe($home . '/foo/var');
+        ->toBe($home.'/foo/var');
 });
-

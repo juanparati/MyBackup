@@ -9,7 +9,6 @@ use Symfony\Component\Yaml\Yaml;
 
 class Config implements \ArrayAccess
 {
-
     public function __construct(protected array $config)
     {
     }
@@ -23,7 +22,7 @@ class Config implements \ArrayAccess
     {
         $filePath = FilePath::fromPath($filePath);
 
-        if (!$filePath->exists(FilePathScope::EXTERNAL)) {
+        if (! $filePath->exists(FilePathScope::EXTERNAL)) {
             throw new ConfigFileException('Unable to find config file', EXIT_NOINPUT);
         }
 
@@ -66,37 +65,30 @@ class Config implements \ArrayAccess
         unset($this->config[$offset]);
     }
 
-
     /**
      * Generate a basic configuration.
-     *
-     * @param string $name
-     * @param string $catalogPath
-     * @param string $snapshotPath
-     * @return array
      */
     public static function generateConfig(
         string $name,
         string $catalogPath,
         string $snapshotPath,
-    ): array
-    {
+    ): array {
         return [
-            "name"            => $name,
-            "catalog_file"    => $catalogPath,
-            "snapshot_file"   => $snapshotPath,
-            "connection"      => [
-                "driver"   => "mysql",
-                "host"     => "localhost",
-                "port"     => 3306,
-                "username" => "root",
-                "password" => ""
+            'name' => $name,
+            'catalog_file' => $catalogPath,
+            'snapshot_file' => $snapshotPath,
+            'connection' => [
+                'driver' => 'mysql',
+                'host' => 'localhost',
+                'port' => 3306,
+                'username' => 'root',
+                'password' => '',
             ],
-            "mysqldump_path"  => "mysqldump",
-            "backup_rotation" => 1,
-            "compress"        => false,
-            "is_replica"      => false,
-            "databases"       => [],
+            'mysqldump_path' => 'mysqldump',
+            'backup_rotation' => 1,
+            'compress' => false,
+            'is_replica' => false,
+            'databases' => [],
         ];
     }
 }

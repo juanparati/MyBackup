@@ -65,8 +65,8 @@ class FilePath
      */
     public function hasExtension(string $extension, bool $sensitive = false): bool
     {
-        $fileExtension = '.' . $this->extension();
-        $extension = $extension[0] === '.' ? $extension : ('.' . $extension);
+        $fileExtension = '.'.$this->extension();
+        $extension = $extension[0] === '.' ? $extension : ('.'.$extension);
 
         if (! $sensitive) {
             $fileExtension = Str::lower($fileExtension);
@@ -76,11 +76,9 @@ class FilePath
         return $fileExtension === $extension;
     }
 
-
     /**
      * Add extension to file.
      *
-     * @param ...$extensions
      * @return $this
      */
     public function addExtension(...$extensions): static
@@ -88,7 +86,7 @@ class FilePath
         $extensions = is_array($extensions[0]) ? $extensions[0] : $extensions;
 
         foreach ($extensions as $extension) {
-            $this->path .= (str($extension)->start('.') ? '' : '.') . $extension;
+            $this->path .= (str($extension)->start('.') ? '' : '.').$extension;
         }
 
         return $this;

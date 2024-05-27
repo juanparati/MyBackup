@@ -2,11 +2,9 @@
 
 namespace App\Commands;
 
-use App\Models\Catalog;
 use App\Models\Config;
 use App\Models\Enums\FilePathScope;
 use App\Models\FilePath;
-use App\Models\Lock;
 use Faker\Core\File;
 use Illuminate\Console\Concerns\PromptsForMissingInput;
 use LaravelZero\Framework\Commands\Command;
@@ -46,27 +44,26 @@ class InitCommand extends BackupCommand implements \Illuminate\Contracts\Console
 
             $this->line('Configuration file already exists');
 
-            if (!$this->option('overwrite')) {
+            if (! $this->option('overwrite')) {
                 $this->error('Unable to overwrite configuration file, please delete the file or use the --overwrite option');
+
                 return EXIT_FAILURE;
             }
         }
 
-        if (!$configFile->hasExtension('.yaml'))
+        if (! $configFile->hasExtension('.yaml')) {
             $configFile->addExtension('.yaml');
+        }
 
         //$this->newLine()->info('Creating new configuration file'$this->line('')
 
         $config = Config::generateConfig(
             uniqid('Backup '),
-            getcwd() . '/catalog.sqlite',
-            getcwd() . '/snapshot_{{numeric:{{datetime}}}}.sql'
+            getcwd().'/catalog.sqlite',
+            getcwd().'/snapshot_{{numeric:{{datetime}}}}.sql'
         );
 
         file_put_contents($configFile, Yaml::dump($config));
         $this->output->success('📝 Plan created');
     }
-
-
-
 }

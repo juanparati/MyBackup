@@ -2,7 +2,6 @@
 
 namespace App\Commands;
 
-use App\Containers\Display;
 use App\Models\Config;
 use App\Models\Enums\FilePathScope;
 use App\Models\Exceptions\ConfigFileException;
@@ -37,7 +36,7 @@ abstract class CommandBase extends Command implements \Illuminate\Contracts\Cons
             return $e->getCode();
         }
 
-        $this->line('Configuration successfully read for plan: <options=bold>' . $this->config->name . '</options=bold>');
+        $this->line('Configuration successfully read for plan: <options=bold>'.$this->config->name.'</options=bold>');
 
         return null;
     }

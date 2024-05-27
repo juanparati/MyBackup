@@ -27,9 +27,6 @@ class Placeholder
 
     /**
      * Replace where placeholders.
-     *
-     * @param string $string
-     * @return string
      */
     public function replace(string $string): string
     {

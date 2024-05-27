@@ -2,7 +2,6 @@
 
 use LaravelZero\Framework\Application;
 
-// List of exit codes
 define('IS_PHAR', ! empty(Phar::running()));
 define('DS', IS_PHAR ? '/' : DIRECTORY_SEPARATOR);
 define('EXECUTABLE', basename(Phar::running()));
