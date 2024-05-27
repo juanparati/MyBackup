@@ -246,20 +246,21 @@ The local filesystem is automatically registered, and it's pointing to the direc
 Example:
 
 ```YAML
-gcloud:
-   driver: gcs
-   project_id: "my_project"
-   bucket: "mybackups"
-   key_file:
-      type: "service_account"
-      private_key_id: ""
-      private_key: ""
-      client_email: ""
-      client_id: ""
-      auth_uri: ""
-      token_uri: ""
-      auth_provider_x509_cert_url: ""
-      client_x509_cert_url: ""
+filesystems:
+   gcloud:
+      driver: gcs
+      project_id: "my_project"
+      bucket: "mybackups"
+      key_file:
+         type: "service_account"
+         private_key_id: ""
+         private_key: ""
+         client_email: ""
+         client_id: ""
+         auth_uri: ""
+         token_uri: ""
+         auth_provider_x509_cert_url: ""
+         client_x509_cert_url: ""
    s3:
       driver: s3
       key: ''
@@ -300,3 +301,34 @@ It will perform additional operations after the full snapshot was dumped.
 The available post actions are:
 - copy (Copy a file)
 - delete_old (Delete/Rotate an old file).
+
+## Placeholders
+
+File names can be automatically generated using placeholders. The following placeholders are available:
+
+### Date and time placeholders
+- {{date}} - It will generate the current date in format YYYY-mm-dd.
+- {{datetime}} - It will generate the current date and time using the format YYYY-mm-dd HH:ii:ss.
+- {{timestamp}} - It will generate the current UNIX timestamp.
+- {{date_calc:}} - It will generate a relative date and time using the format YYYY-mm-dd. Example: {{date_calc:-2days}} or {{date_calc:+1month}}.
+- {{uuid}} - It will generate a UUID7.
+
+### Special placeholders
+- {{snapshot_file}} - It's replaced with the final snapshot file name with all the final extensions. It cannot be used by **snapshot_file** parameter.
+
+### Format placeholders
+
+- {{date:}} - It will truncate a datetime format as date. Example: {{date:2024-01-01 01:00:00}} will generate 2024-01-01.
+- {{datetime:}} - It will truncate a date as datetime. Example: {{datetime:2024-01-01}} will generate 2024-01-01 00:00:00.
+- {{numeric:}} - It will remove all non-numeric characters. Examnple: {{numeric:2024-01-01}} will generate 20240101.
+- {{basename:}} - It will extract the basename of a path. Example: {{basename:/foo/var/file.sql}} is replaced by "file.sql".
+
+### Placeholders chain
+
+Placeholders can be combined.
+
+Examples:
+
+- {{basename:{{snapshot_file}}}} - It will extract the basename of the snapshot path.
+- {{date:{{date_calc:-1week}} - It will extract the date in format YYYY-mm-dd of the {{date_calc:-1week}} result.
+- {{numeric:{{datetime}}} - It remove all non-numeric characters of the {{datetime}} result.

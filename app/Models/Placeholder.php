@@ -65,6 +65,7 @@ class Placeholder
                     'minute', 'minutes' => now()->subMinutes($match[2]),
                     'hour'  , 'hours' => now()->subHours($match[2]),
                     'day'   , 'days' => now()->subDays($match[2]),
+                    'week', 'weeks' => now()->subWeeks($match[2]),
                     'month' , 'months' => now()->subMonths($match[2]),
                     'year'  , 'years' => now()->subYears($match[2]),
                 };
