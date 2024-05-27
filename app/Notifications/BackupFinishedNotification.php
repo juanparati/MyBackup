@@ -11,7 +11,7 @@ class BackupFinishedNotification extends DynamicNotificationBase implements Dyna
     public function __construct(array $settings, array $data = [])
     {
         parent::__construct($settings, $data);
-        $this->data['size'] /= 1024;
+        $this->data['size'] = round($data['size'] / 1024);
     }
 
     public function toMail($notifiable): MailMessage

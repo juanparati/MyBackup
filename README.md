@@ -200,3 +200,103 @@ See [Backup plan and options for examples](#backup-plan-and-options).
 Defined by option "**encryptation**".
 
 It will encrypt the snapshot file. The ".aes" extension will be added to the snapshot file name.
+
+
+### Notifications
+
+Defined by option "**notifications**".
+
+It defines the notifications methods so backups are reported when the process is finished.
+
+Only "slack" and "mail" methods are available and both methods can be used at same time.
+
+Example:
+
+```YAML
+notifications:
+  slack:
+    username: 'BackupBot'
+    channel: "[CHANNELID]"
+    webhook: "https://hooks.slack.com/services/[ID]"
+  mail:
+    address: "example@example.net"       
+    host: '127.0.0.1'
+    port: 2525
+    encryption: 'tls'
+    username: ''
+    password: ''
+    timeout: null
+```
+
+### Filesystems
+
+Defined by option "**filesystems**".
+
+It defines multiple different filesystems that can be used by the "post_actions".
+
+The supported filesystems are:
+- Google Cloud Storage
+- S3
+- FTP
+- SFTP
+- local
+
+The local filesystem is automatically registered, and it's pointing to the directory where the snapshot is located.
+
+Example:
+
+```YAML
+gcloud:
+   driver: gcs
+   project_id: "my_project"
+   bucket: "mybackups"
+   key_file:
+      type: "service_account"
+      private_key_id: ""
+      private_key: ""
+      client_email: ""
+      client_id: ""
+      auth_uri: ""
+      token_uri: ""
+      auth_provider_x509_cert_url: ""
+      client_x509_cert_url: ""
+   s3:
+      driver: s3
+      key: ''
+      secret: ''
+      region: 'eu-central-1'
+      bucket: 'mybackup-bucket'
+   ftp:
+      driver: ftp
+      host: 'localhost'
+      username: 'username'
+      password: 'secret'
+   sftp:
+      driver: 'sftp'
+      host: 'localhost'
+      username: 'username'
+      password: 'secret'
+      privateKey: '/foo/bar/.ssh/id_rsa'
+      passphrase: 'secret'
+      # Settings for file / directory permissions...
+      visibility: 'private'            # `private` = 0600, `public` = 0644
+      directory_visibility: 'private'  # `private` = 0700, `public` = 0755
+      # Optional SFTP Settings...
+      # hostFingerprint: ''
+      # maxTries: 4
+      # passphrase: ''
+      # port: 22
+      # root: ''
+      # timeout: 30,
+      # useAgent: true
+```
+
+### Post actions
+
+Defined by "**post_actions**".
+
+It will perform additional operations after the full snapshot was dumped.
+
+The available post actions are:
+- copy (Copy a file)
+- delete_old (Delete/Rotate an old file).
