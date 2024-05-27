@@ -65,7 +65,8 @@ class FilePath
      */
     public function hasExtension(string $extension, bool $sensitive = false): bool
     {
-        $fileExtension = $this->extension();
+        $fileExtension = '.' . $this->extension();
+        $extension = $extension[0] === '.' ? $extension : ('.' . $extension);
 
         if (! $sensitive) {
             $fileExtension = Str::lower($fileExtension);
