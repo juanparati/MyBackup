@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use Ramsey\Uuid\Uuid;
+
 class Placeholder
 {
     /**
@@ -26,7 +28,8 @@ class Placeholder
     /**
      * Replace where placeholders.
      *
-     * @param  string  $where
+     * @param string $string
+     * @return string
      */
     public function replace(string $string): string
     {
@@ -36,7 +39,7 @@ class Placeholder
         }
 
         // Filesystem related placeholders
-        if (preg_match_all('/{{basename:(.*)}}/m', $string, $matches, PREG_SET_ORDER)) {
+        if (preg_match_all('/{{basename:(.*)}}/mU', $string, $matches, PREG_SET_ORDER)) {
             foreach ($matches as $match) {
                 $string = str_replace($match[0], basename($match[1]), $string);
             }
@@ -59,7 +62,7 @@ class Placeholder
         };
 
         // Replace by current time -/+ interval (Ex: {{date_calc:-10days}})
-        if (preg_match_all('/{{date_calc:([-+])([0-9]+)(minute|minutes|hour|hours|day|days|month|months|year|years)?}}/m', $string, $matches, PREG_SET_ORDER)) {
+        if (preg_match_all('/{{date_calc:([-+])([0-9]+)(minute|minutes|hour|hours|day|days|month|months|year|years)?}}/mU', $string, $matches, PREG_SET_ORDER)) {
             foreach ($matches as $match) {
                 $date = match ($match[3] ?? 'hour') {
                     'minute', 'minutes' => now()->subMinutes($match[2]),
@@ -73,30 +76,27 @@ class Placeholder
             }
         }
 
-        // Replace by UUID 7 based on a specific time (Ex: {{uuid:2024-02-01}})
-        if (preg_match_all('/{{uuid'.$regDatetime.'}}/m', $string, $matches, PREG_SET_ORDER)) {
-            $string = $dateConvertFnc(
-                $string,
-                $matches,
-                fn ($date) => substr(Uuid::uuid7($date), 0, 12).'0-0000-0000-000000000000');
-        }
-
-        // Replaced by date format (Ex: {{date_format:2024-02-01 13:00:00}}
-        if (preg_match_all('/{{date'.$regDatetime.'}}/m', $string, $matches, PREG_SET_ORDER)) {
+        // Replaced by date (Ex: {{date:2024-02-01 13:00:00}} -> 2024-02-01)
+        if (preg_match_all('/{{date'.$regDatetime.'}}/mU', $string, $matches, PREG_SET_ORDER)) {
             $string = $dateConvertFnc($string, $matches, fn ($date) => $date->toDateString());
         }
 
-        // Replaced by datetime format (Ex: {{datetime_format:2024-02-01}}
-        if (preg_match_all('/{{datetime'.$regDatetime.'}}/m', $string, $matches, PREG_SET_ORDER)) {
+        // Replaced by datetime format (Ex: {{datetime:2024-02-01}}
+        if (preg_match_all('/{{datetime'.$regDatetime.'}}/mU', $string, $matches, PREG_SET_ORDER)) {
             $string = $dateConvertFnc($string, $matches, fn ($date) => $date->toDateTimeString());
         }
 
         // Replaced by datetime format (Ex: {{date_format:2024-02-01}}
-        if (preg_match_all('/{{timestamp'.$regDatetime.'}}/m', $string, $matches, PREG_SET_ORDER)) {
+        if (preg_match_all('/{{timestamp'.$regDatetime.'}}/mU', $string, $matches, PREG_SET_ORDER)) {
             $string = $dateConvertFnc($string, $matches, fn ($date) => $date->timestamp);
         }
 
-        if (preg_match_all('/{{numeric:(.*)}}/m', $string, $matches, PREG_SET_ORDER)) {
+        // Replace by UUID 7 based on a specific time (Ex: {{uuid:2024-02-01}})
+        if (preg_match_all('/{{uuid'.$regDatetime.'}}/mU', $string, $matches, PREG_SET_ORDER)) {
+            $string = $dateConvertFnc($string, $matches, fn ($date) => Uuid::uuid7($date));
+        }
+
+        if (preg_match_all('/{{numeric:(.*)}}/mU', $string, $matches, PREG_SET_ORDER)) {
             foreach ($matches as $match) {
                 $string = str_replace(
                     $match[0],
