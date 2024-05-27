@@ -70,6 +70,9 @@ databases:
         - table2
         - table3:
             where: "created_at >= DATE(DATE_SUB(NOW(), INTERVAL 1 MONTH))"
+encryption:                                           # It will encrypt the snapshot file
+   method: "AES-128-CBC"
+   key: "mysecretkey12345"
 notifications:
   slack:
     username: 'BackupBot'
@@ -115,39 +118,40 @@ post_actions:
 
 Defined by option "**catalog_file**".
 
-It's a sqlite file that save the historical list of the previous completed backups and the lock information.
-The lock information will avoid overlap two or more backups process over the same backup plan.
+It's a sqlite file that contains the historical list of the previous completed backups and the lock information.
+The lock information will avoid overlap two or more backups processes over the currently running backup plan.
+
 The catalog file is created automatically when it's missing.
 
 ### Snapshot file
 
 Defined by option "**snapshot_file**".
 
-It's the destination of the backup snapshot. In case that file is compressed and/or encrypted the file will hava the additional extensions.
+It's the destination of the backup snapshot. In case that file is compressed and/or encrypted the file may have additional extensions.
 
 ### Connection
 
 Defined by option "**connection**".
 
-Indicate the connection options the only supported drivers are "mysql" and "mariadb", however MariaDB also works with "mysql" driver.
+Indicate the connection options. The only supported drivers are "mysql" and "mariadb", however MariaDB also works with "mysql" driver.
 
 The possible options are:
 
 ```YAML
-driver: 'mysql',
-url: '',
-host: '127.0.0.1',
-port: '3306',
-database: 'laravel',
-username: 'root'),
-password: '',
-unix_socket: '',
+driver: 'mysql'
+url: ''
+host: '127.0.0.1'
+port: '3306'
+database: 'laravel'
+username: 'root'
+password: ''
+unix_socket: ''
 ```
 ### MySQLDump path
 
 Defined by option "**mysqldump_path**".
 
-MyBackup uses internally "mysqldump" and "mariadb-dump" tools. If the full path to the dump tool is not supplied then MyBackup will attempt to find the path the to tool.
+MyBackup uses internally "mysqldump" or "mariadb-dump". If the full path to the dump tool is not supplied then MyBackup will attempt to find the path automatically.
 
 Example:
 
@@ -161,15 +165,17 @@ Defined by option "**backup_rotation**".
 
 It will remove the old snapshots from the local filesystem. 
 
-MyBackup can rotate the old snapshots based on a relative time reference indicating a time reference like for example: "1 day", "2 days", "3 weeks", "1 month", etc.
+MyBackup can rotate the old snapshots based on a relative time indicating a time reference like for example: "1 day", "2 days", "3 weeks", "1 month", etc.
 
 MyBackup can also rotate the old snapshots based on the sequence using just a number. So for example 2 will indicate that MyBackup will keep the last 2 previous backups.
 
-### Compress
+
+### Snapshot compression
 
 Defined by option "**compress**".
 
 It will compress the snapshot file as a GZ file. The ".gz" will be added to snapshot file.
+
 
 ### Check replication
 
@@ -177,7 +183,8 @@ Defined by option "**is_replica**".
 
 If the backup is taken from a read replica it's very recommended to check if the replica is running before to perform the backup, so it will avoid to dump snapshots from a server that is not synchronised with the master.
 
-When this option is equal to true and the read-replica is not running or not reading binlogs from the master server it will stop the backup process.
+When this option is equal to `true` and the read-replica is not running or not reading binlogs from the master server it will stop the backup process.
+
 
 ### Define objets to dump
 
@@ -186,3 +193,10 @@ Defined by option "**databases**".
 Define which databases or selected tables are dumped into the snapshot.
 
 See [Backup plan and options for examples](#backup-plan-and-options).
+
+
+### Snapshot Encryption
+
+Defined by option "**encryptation**".
+
+It will encrypt the snapshot file. The ".aes" extension will be added to the snapshot file name.
