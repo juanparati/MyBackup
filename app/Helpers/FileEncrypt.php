@@ -19,7 +19,12 @@ class FileEncrypt
     /**
      * Encrypt file
      *
-     * @param  bool  $withCompression
+     * @param string $filePath
+     * @param string $dest
+     * @param string $key
+     * @param string $method
+     * @param OutputStyle|null $output
+     * @return bool
      */
     public static function encrypt(
         string $filePath,

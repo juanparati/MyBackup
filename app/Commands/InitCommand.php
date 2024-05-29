@@ -17,7 +17,7 @@ class InitCommand extends BackupCommand implements \Illuminate\Contracts\Console
      *
      * @var string
      */
-    protected $signature = 'init {config_file : configuration file}      
+    protected $signature = 'init {config_file=backup_plan.yaml : configuration file}       
         {--overwrite : overwrite old configuration file}';
 
     /**

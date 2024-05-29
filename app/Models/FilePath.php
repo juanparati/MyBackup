@@ -86,7 +86,7 @@ class FilePath
         $extensions = is_array($extensions[0]) ? $extensions[0] : $extensions;
 
         foreach ($extensions as $extension) {
-            $this->path .= (str($extension)->start('.') ? '' : '.').$extension;
+            $this->path .= ($extension[0] === '.' ? '' : '.') . $extension;
         }
 
         return $this;

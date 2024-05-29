@@ -12,3 +12,18 @@ test('replace by home', function () {
         ->and(FilePath::fromPath('~/foo/var')->path())
         ->toBe($home.'/foo/var');
 });
+
+test('add file extension', function() {
+   expect(
+       FilePath::fromPath('file.txt')
+           ->addExtension('gz')
+           ->path()
+   )
+       ->toBe('file.txt.gz')
+       ->and(
+           FilePath::fromPath('file.txt')
+               ->addExtension('.gz')
+               ->path()
+       )
+       ->toBe('file.txt.gz');
+});
