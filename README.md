@@ -44,41 +44,41 @@ An example of a complete backup plan may look like the following one:
 
 ```YAML
 name: "Backup plan"
-catalog_file: "/tmp/catalog.sqlite"                         # Path to the snapshots catalog
-snapshot_file: "/tmp/snapshot_{{numeric:{{datetime}}}}.sql" # Path to the snapshot
+catalog_file: "/tmp/catalog.sqlite"                   # Path to the snapshots catalog.
+snapshot_file: "/tmp/snapshot_{{numeric:{{datetime}}}}.sql" # Path to the snapshot.
 connection:
-    driver: "mysql"                                   # Supported drivers are "mysql" and "mariadb"                                                                                       
-    host: "localhost"
-    port: 3306
-    username: "root"
-    password: "secret"                                # When this line is missing it will prompt the password
-mysqldump_path: "mysqldump"                           # Path to mysqldump/mariadb-dump                             
-backup_rotation: "2 days"                             # It will delete the backups older than 2 days
-compress: true                                        # It will compress the snapshot file                
-is_replica: true                                      # It will check if read-replica is synchronised                             
+   driver: "mysql"                                    # Supported drivers are "mysql" and "mariadb".                                                                                       
+   host: "localhost"
+   port: 3306
+   username: "root"
+   password: "secret"                                 # When this line is missing it will prompt the password.
+mysqldump_path: "mysqldump"                           # Path to mysqldump/mariadb-dump.                             
+backup_rotation: "2 days"                             # It will delete the backups older than 2 days.
+compress: true                                        # It will compress the snapshot file.                
+is_replica: true                                      # It will check if read-replica is synchronised.                             
 databases:
-  - firstdb                                           # It will dump the entire "firstdb" database
-  - secondb:                                          # It will dump "seconddb" database with custom options and ignoring some tables
-      options: ["--single-transaction", "--quick", "--compress"]
-      ignore: ["table1", "table2"]
-  - thirddb:                                          # It will dump some tables of "thirddb" database.
-      options: ["--single-transaction", "--quick"]
-      to: firstdb                                     # It will copy the tables into the "firstdb"
-      tables:
-        - table1:
-            where: "id >= 1000000"
-        - table2
-        - table3:
-            where: "created_at >= DATE(DATE_SUB(NOW(), INTERVAL 1 MONTH))"
-encryption:                                           # It will encrypt the snapshot file
+   - firstdb                                          # It will dump the entire "firstdb" database.
+   - secondb:                                         # It will dump "seconddb" database with custom options and ignoring some tables.
+        options: [ "--single-transaction", "--quick", "--compress" ]
+        ignore: [ "table1", "table2" ]
+   - thirddb: # It will dump some tables of "thirddb" database.
+        options: [ "--single-transaction", "--quick" ]
+        to: firstdb                                   # It will copy the tables into the "firstdb".
+        tables:
+           - table1:
+                where: "id >= 1000000"
+           - table2
+           - table3:
+                where: "created_at >= DATE(DATE_SUB(NOW(), INTERVAL 1 MONTH))"
+encryption:                                           # It will encrypt the snapshot file.
    method: "AES-128-CBC"
    key: "mysecretkey12345"
-notifications:
-  slack:
-    username: 'BackupBot'
-    channel: "[CHANNELID]"
-    webhook: "https://hooks.slack.com/services/[ID]"
-filesystems:
+notifications:                                        # It will send a Slack notification when backup is finished.
+   slack:
+      username: 'BackupBot'
+      channel: "[CHANNELID]"
+      webhook: "https://hooks.slack.com/services/[ID]"
+filesystems:                                          # It will define different filesystems.
    gcloud:
       driver: gcs
       project_id: "my_project"
@@ -100,17 +100,17 @@ filesystems:
       region: 'eu-central-1'
       bucket: 'mybackup-bucket'
 post_actions:
-   - copy:                            # Copy snapshot file to gcloud filesystem
+   - copy:                                          # Copy snapshot file to gcloud filesystem.
         filesystem: gcloud
         source: '{{snapshot_file}}'
         destination: '{{basename:{{snapshot_file}}}}'
-   - copy:                            # Copy snapshot file to s3 filesystem
+   - copy:                                          # Copy snapshot file to s3 filesystem.
         filesystem: s3
         source: '{{snapshot_file}}'
         destination: '{{uuid}}.sql.gz.aes'
-   - delete_old:
+   - delete_old:                                    # Delete all files older than 3 days which name starts with "snapshot_" into the gcloud filesystem.
         filesystem: gcloud
-        pattern: 'snapshot_test_*'
+        pattern: 'snapshot_*'
         period: '3 days'
 ```
 
@@ -119,7 +119,9 @@ post_actions:
 Defined by option "**catalog_file**".
 
 It's a sqlite file that contains the historical list of the previous completed backups and the lock information.
-The lock information will avoid overlap two or more backups processes over the currently running backup plan.
+The lock information will avoid overlap two or more backup processes.
+
+Each backup plan requires a different catalog file.
 
 The catalog file is created automatically when it's missing.
 
@@ -168,7 +170,9 @@ It will remove the old snapshots from the local filesystem.
 
 MyBackup can rotate the old snapshots based on a relative time indicating a time reference like for example: "1 day", "2 days", "3 weeks", "1 month", etc.
 
-MyBackup can also rotate the old snapshots based on the sequence using just a number. So for example 2 will indicate that MyBackup will keep the last 2 previous backups.
+MyBackup can also rotate the old snapshots based on the backup sequence using just a number. So for example 2 will indicate that MyBackup will keep the last 2 previous backups.
+
+When this option is missing the rotation is disabled.
 
 
 ### Snapshot compression
@@ -315,7 +319,7 @@ File names can be automatically generated using placeholders. The following plac
 - {{uuid}} - It will generate a UUID7.
 
 ### Special placeholders
-- {{snapshot_file}} - It's replaced with the final snapshot file name with all the final extensions. It cannot be used by **snapshot_file** parameter.
+- {{snapshot_file}} - It's replaced with the final snapshot file name with all the final extensions. It cannot be used into the **snapshot_file** option.
 
 ### Format placeholders
 

@@ -246,8 +246,8 @@ class BackupCommand extends CommandBase
                 $this->newLine()->info('Rotating backups...');
                 if (is_int($this->config->backup_rotation) || ctype_digit($this->config->backup_rotation)) {
                     $catalogItems = Catalog::query()
-                        ->where('id', '<', $lastCreatedCatalog->id)
-                        ->limit((int) $this->config->backup_rotation)
+                        ->where('id', '<=', ($lastCreatedCatalog->id - $this->config->backup_rotation))
+                        ->orderBy('id')
                         ->get();
                 } else {
                     $catalogItems = Catalog::query()
