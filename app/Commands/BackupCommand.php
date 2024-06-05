@@ -16,6 +16,7 @@ use App\Models\Placeholder;
 use App\Notifications\BackupFinishedNotification;
 use Illuminate\Support\Facades\Process;
 
+use Symfony\Component\Console\Command\Command;
 use function Laravel\Prompts\password;
 
 class BackupCommand extends CommandBase
@@ -77,7 +78,7 @@ class BackupCommand extends CommandBase
             $exitCode = $this->executeTasks();
         } catch (\Exception $e) {
             $this->error('Unable to perform backup: ' . $e->getMessage());
-            $exitCode = EXIT_FAILURE;
+            $exitCode = Command::FAILURE;
         }
 
         if (!$this->option('dry')) {
@@ -106,7 +107,7 @@ class BackupCommand extends CommandBase
             if (!$mysqlDumpPathSearch->successful()) {
                 $this->error('Unable to find ' . $mysqlDumpPath);
 
-                return EXIT_FAILURE;
+                return Command::FAILURE;
             }
 
             $mysqlDumpPath = FilePath::fromPath($mysqlDumpPathSearch->output());
@@ -125,7 +126,7 @@ class BackupCommand extends CommandBase
             $this->error('Could not connect to database');
             Lock::unlock();
 
-            return EXIT_FAILURE;
+            return Command::FAILURE;
         }
 
         // Check replication status
@@ -137,7 +138,7 @@ class BackupCommand extends CommandBase
                 $this->error('Replication is not working');
                 Lock::unlock();
 
-                return EXIT_FAILURE;
+                return Command::FAILURE;
             }
         }
 
@@ -148,7 +149,7 @@ class BackupCommand extends CommandBase
         if ($snapshotFile->exists(FilePathScope::EXTERNAL)) {
             $this->error('Snapshot already exists!');
 
-            return EXIT_FAILURE;
+            return Command::FAILURE;
         }
 
         $dump = (new MySQLDump(
@@ -232,7 +233,7 @@ class BackupCommand extends CommandBase
                 if (!$encrypted) {
                     $this->error('Unable to encrypt snapshot file');
 
-                    return EXIT_FAILURE;
+                    return Command::FAILURE;
                 }
 
                 $snapshotFile->rm();
@@ -293,7 +294,7 @@ class BackupCommand extends CommandBase
 
         $this->output->success('👍 Backup process was successfully finished!');
 
-        return EXIT_SUCCESS;
+        return Command::SUCCESS;
 
     }
 

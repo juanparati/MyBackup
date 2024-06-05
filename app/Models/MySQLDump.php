@@ -2,9 +2,11 @@
 
 namespace App\Models;
 
+use App\Commands\CommandBase;
 use App\Models\Enums\FilePathScope;
 use Illuminate\Console\OutputStyle;
 use Illuminate\Support\Arr;
+use Symfony\Component\Console\Command\Command;
 
 class MySQLDump
 {
@@ -275,7 +277,7 @@ class MySQLDump
                 // dump($command);
                 exec($command, $output, $status);
 
-                if ($status !== EXIT_SUCCESS) {
+                if ($status !== Command::SUCCESS) {
                     throw new \RuntimeException('unable to dump snapshot');
                 }
 

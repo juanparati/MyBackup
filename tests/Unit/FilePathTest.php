@@ -1,29 +1,39 @@
 <?php
 
+namespace Tests\Unit;
+
 use App\Models\FilePath;
+use Tests\TestCase;
 
-uses(\Illuminate\Support\Facades\File::class)->in('Unit');
+class FilePathTest extends TestCase
+{
 
-test('replace by home', function () {
-    $home = getenv('HOME');
+    public function testReplaceByHome() {
+        $home = getenv('HOME');
 
-    expect(FilePath::fromPath('~')->path())
-        ->toBe($home)
-        ->and(FilePath::fromPath('~/foo/var')->path())
-        ->toBe($home.'/foo/var');
-});
+        $this->assertEquals(
+            $home,
+            FilePath::fromPath('~')->path()
+        );
 
-test('add file extension', function() {
-   expect(
-       FilePath::fromPath('file.txt')
-           ->addExtension('gz')
-           ->path()
-   )
-       ->toBe('file.txt.gz')
-       ->and(
-           FilePath::fromPath('file.txt')
-               ->addExtension('.gz')
-               ->path()
-       )
-       ->toBe('file.txt.gz');
-});
+        $this->assertEquals(
+            $home . '/foo/bar',
+            FilePath::fromPath('~')->expand('foo', 'bar')->path()
+        );
+    }
+
+
+    public function testAddExtension()
+    {
+        $this->assertEquals(
+            'file.txt.gz',
+            FilePath::fromPath('file.txt')->addExtension('gz')->path()
+        );
+
+        $this->assertEquals(
+            'file.txt.gz',
+            FilePath::fromPath('file.txt')->addExtension('.gz')->path()
+        );
+    }
+
+}

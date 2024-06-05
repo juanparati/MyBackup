@@ -1,33 +1,117 @@
 <?php
 
+namespace Tests\Unit;
+
 use App\Helpers\DeclarativeHumanDate;
+use Carbon\CarbonInterface;
+use Tests\TestCase;
 
-$current = now()->toImmutable();
+class DeclarativeHumanDateTest extends TestCase
+{
 
-test('relative to days', function () use ($current) {
-    expect(DeclarativeHumanDate::relative('1 day', $current)->toDateTimeString())
-        ->toBe($current->subDay()->toDateTimeString())
-        ->and(DeclarativeHumanDate::relative('2 days', $current)->toDateTimeString())
-        ->toBe($current->subDays(2)->toDateTimeString());
-});
+    protected CarbonInterface $currentDate;
 
-test('relative to minutes', function () use ($current) {
-    expect(DeclarativeHumanDate::relative('1 minute', $current)->toDateTimeString())
-        ->toBe($current->subMinute()->toDateTimeString())
-        ->and(DeclarativeHumanDate::relative('2 minutes', $current)->toDateTimeString())
-        ->toBe($current->subMinutes(2)->toDateTimeString());
-});
 
-test('relative to months', function () use ($current) {
-    expect(DeclarativeHumanDate::relative('1 month', $current)->toDateTimeString())
-        ->toBe($current->subMonth()->toDateTimeString())
-        ->and(DeclarativeHumanDate::relative('2 months', $current)->toDateTimeString())
-        ->toBe($current->subMonths(2)->toDateTimeString());
-});
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->currentDate = now()->toImmutable();
+    }
 
-test('relative to years', function () use ($current) {
-    expect(DeclarativeHumanDate::relative('1 year', $current)->toDateTimeString())
-        ->toBe($current->subYear()->toDateTimeString())
-        ->and(DeclarativeHumanDate::relative('2 years', $current)->toDateTimeString())
-        ->toBe($current->subYears(2)->toDateTimeString());
-});
+
+    public function testRelativeToMinutes()
+    {
+        $declarative = DeclarativeHumanDate::relative('1 minute', $this->currentDate)
+            ->toDateTimeString();
+
+        $this->assertEquals($declarative, $this->currentDate->subMinute()->toDateTimeString());
+
+        $diff = rand(2, 10);
+
+        $declarative = DeclarativeHumanDate::relative($diff .' minutes', $this->currentDate)
+            ->toDateTimeString();
+
+        $this->assertEquals($declarative, $this->currentDate->subMinutes($diff)->toDateTimeString());
+    }
+
+
+    public function testRelativeToHours()
+    {
+        $declarative = DeclarativeHumanDate::relative('1 hour', $this->currentDate)
+            ->toDateTimeString();
+
+        $this->assertEquals($declarative, $this->currentDate->subHour()->toDateTimeString());
+
+        $diff = rand(2, 10);
+
+        $declarative = DeclarativeHumanDate::relative($diff .' hours', $this->currentDate)
+            ->toDateTimeString();
+
+        $this->assertEquals($declarative, $this->currentDate->subHours($diff)->toDateTimeString());
+    }
+
+
+    public function testRelativeToDays()
+    {
+        $declarative = DeclarativeHumanDate::relative('1 day', $this->currentDate)
+            ->toDateTimeString();
+
+        $this->assertEquals($declarative, $this->currentDate->subDay()->toDateTimeString());
+
+        $diff = rand(2, 10);
+
+        $declarative = DeclarativeHumanDate::relative($diff .' days', $this->currentDate)
+            ->toDateTimeString();
+
+        $this->assertEquals($declarative, $this->currentDate->subDays($diff)->toDateTimeString());
+    }
+
+
+    public function testRelativeToWeeks()
+    {
+        $declarative = DeclarativeHumanDate::relative('1 week', $this->currentDate)
+            ->toDateTimeString();
+
+        $this->assertEquals($declarative, $this->currentDate->subWeek()->toDateTimeString());
+
+        $diff = rand(2, 10);
+
+        $declarative = DeclarativeHumanDate::relative($diff .' weeks', $this->currentDate)
+            ->toDateTimeString();
+
+        $this->assertEquals($declarative, $this->currentDate->subWeeks($diff)->toDateTimeString());
+    }
+
+
+    public function testRelativeToMonths()
+    {
+        $declarative = DeclarativeHumanDate::relative('1 month', $this->currentDate)
+            ->toDateTimeString();
+
+        $this->assertEquals($declarative, $this->currentDate->subMonth()->toDateTimeString());
+
+        $diff = rand(2, 10);
+
+        $declarative = DeclarativeHumanDate::relative($diff .' months', $this->currentDate)
+            ->toDateTimeString();
+
+        $this->assertEquals($declarative, $this->currentDate->subMonths($diff)->toDateTimeString());
+    }
+
+
+    public function testRelativeToYears()
+    {
+        $declarative = DeclarativeHumanDate::relative('1 year', $this->currentDate)
+            ->toDateTimeString();
+
+        $this->assertEquals($declarative, $this->currentDate->subYear()->toDateTimeString());
+
+        $diff = rand(2, 10);
+
+        $declarative = DeclarativeHumanDate::relative($diff .' years', $this->currentDate)
+            ->toDateTimeString();
+
+        $this->assertEquals($declarative, $this->currentDate->subYears($diff)->toDateTimeString());
+    }
+
+}

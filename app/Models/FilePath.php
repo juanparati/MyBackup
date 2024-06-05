@@ -93,6 +93,25 @@ class FilePath
     }
 
     /**
+     * Expand directory path.
+     *
+     * @param ...$subDirs
+     * @return $this
+     */
+    public function expand(...$subDirs): static
+    {
+        $subDirs = is_array($subDirs[0]) ? $subDirs[0] : $subDirs;
+
+        if ($this->path[-1] !== DS)
+            $this->path .= DS;
+
+        $this->path .= implode(DS, $subDirs);
+        $this->path = preg_replace('#' . DS . '+#',DS, $this->path);
+        return $this;
+    }
+
+
+    /**
      * Check if file exists.
      */
     public function exists(FilePathScope $scope = FilePathScope::AUTO): bool

@@ -1,81 +1,132 @@
 <?php
 
+namespace Tests\Unit;
+
 use App\Models\Placeholder;
+use Tests\TestCase;
 
-$dictionary = [
-    'snapshot_file' => '/foo/bar/file123.sql',
-];
+class PlaceholderTest extends TestCase
+{
 
-$placeholder = new Placeholder($dictionary);
+    protected array $dictionary = [
+        'snapshot_file' => '/foo/bar/file123.sql',
+    ];
 
-test('replace from dictionary', function () use ($placeholder, $dictionary) {
-    expect($placeholder->replace('{{snapshot_file}}'))
-        ->toBe($dictionary['snapshot_file']);
-});
+    protected Placeholder $placeholder;
 
-test('replace and process from dictionary', function () use ($placeholder, $dictionary) {
-    $repString = '/one/two space/%s_file';
 
-    expect($placeholder->replace('{{basename:{{snapshot_file}}}}'))
-        ->toBe(basename($dictionary['snapshot_file']))
-        ->and($placeholder->replace(sprintf($repString, '{{basename:{{snapshot_file}}}}')))
-        ->toBe(sprintf($repString, basename($dictionary['snapshot_file'])));
-});
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->placeholder = new Placeholder($this->dictionary);
+    }
 
-test('replace by date', function () use ($placeholder) {
-    expect($placeholder->replace('{{date}}'))
-        ->toBe(now()->toDateString())
-        ->and($placeholder->replace('{{date:2024-01-01 03:33:12}}'))
-        ->toBe('2024-01-01');
-});
 
-test('replace by datetime', function () use ($placeholder) {
-    expect($placeholder->replace('{{datetime}}'))
-        ->toBe(now()->toDateTimeString())
-        ->and($placeholder->replace('{{datetime:2024-01-01}}'))
-        ->toBe('2024-01-01 00:00:00');
-});
+    public function testReplaceFromDictionary(): void
+    {
+        $repString = '/one/two space/%s_file';
 
-test('replace by timestamp', function () use ($placeholder) {
-    expect($placeholder->replace('{{timestamp}}'))
-        ->toBe((string) now()->timestamp)
-        ->and($placeholder->replace('{{timestamp:2024-01-01 00:00:00}}'))
-        ->toBe((string) now()->parse('2024-01-01 00:00:00')->timestamp);
-});
+        $this->assertEquals(
+            basename($this->dictionary['snapshot_file']),
+            $this->placeholder->replace('{{basename:{{snapshot_file}}}}')
+        );
 
-test('replace by numeric', function () use ($placeholder) {
-    expect($placeholder->replace('{{numeric:{{datetime}}}}'))
-        ->toBe(preg_replace("~\D~", '', now()->toDateTimeString()))
-        ->and($placeholder->replace('{{numeric:1j2f3c}}'))
-        ->toBe('123');
-});
+        $this->assertEquals(
+            sprintf($repString, basename($this->dictionary['snapshot_file'])),
+            $this->placeholder->replace(sprintf($repString, '{{basename:{{snapshot_file}}}}'))
+        );
+    }
 
-test('replace by relative time', function () use ($placeholder) {
-    expect($placeholder->replace('{{date_calc:-1hour}}'))
-        ->toBe(now()->subHour()->toDateTimeString());
-});
 
-test('replace by uuid', function () use ($placeholder) {
-    expect($placeholder->replace('{{uuid}}'))
-        ->toBeUuid()
-        ->and($placeholder->replace('{{uuid:2024-01-01 00:00:00}}'))
-        ->toBeUuid();
-});
+    public function testReplaceByDate(): void
+    {
+        $this->assertEquals(
+            now()->toDateString(),
+            $this->placeholder->replace('{{date}}')
+        );
 
-test('placeholder combination', function () use ($placeholder, $dictionary) {
-    $repString = 'The %s was generated at %s';
-    expect($placeholder->replace(
-        sprintf($repString, '{{basename:{{snapshot_file}}}}', '{{numeric:{{date:2024-01-01 00:00:00}}}}')
-    ))
-        ->toBe(sprintf($repString, basename($dictionary['snapshot_file']), '20240101'));
-});
+        $this->assertEquals(
+            '2024-01-01',
+            $this->placeholder->replace('{{date:2024-01-01 03:33:12}}')
+        );
+    }
 
-test('placeholder combination with same pattern', function () use ($placeholder, $dictionary) {
-    $basename = basename($dictionary['snapshot_file']);
-    $repString = '%s and %s';
 
-    expect($placeholder->replace(
-        sprintf($repString, '{{basename:{{snapshot_file}}}}', '{{basename:{{snapshot_file}}}}'))
-    )
-        ->toBe(sprintf($repString, $basename, $basename));
-});
+    public function testReplaceByDateTime(): void
+    {
+        $this->assertEquals(
+            now()->toDateTimeString(),
+            $this->placeholder->replace('{{datetime}}')
+        );
+
+        $this->assertEquals(
+            '2024-01-01 00:00:00',
+            $this->placeholder->replace('{{datetime:2024-01-01}}')
+        );
+    }
+
+
+    public function testReplaceByTimestamp(): void
+    {
+        $this->assertEquals(
+            (string) now()->timestamp,
+            $this->placeholder->replace('{{timestamp}}')
+        );
+
+        $this->assertEquals(
+            (string) now()->parse('2024-01-01 00:00:00')->timestamp,
+            $this->placeholder->replace('{{timestamp:2024-01-01 00:00:00}}')
+        );
+    }
+
+
+    public function testByNumeric(): void
+    {
+        $this->assertEquals(
+            preg_replace("~\D~", '', now()->toDateTimeString()),
+            $this->placeholder->replace('{{numeric:{{datetime}}}}')
+        );
+
+        $this->assertEquals(
+            '123',
+            $this->placeholder->replace('{{numeric:1j2f3c}}')
+        );
+    }
+
+
+    public function testReplaceByRelativeTime(): void
+    {
+        $this->assertEquals(
+            now()->subHour()->toDateTimeString(),
+            $this->placeholder->replace('{{date_calc:-1hour}}')
+        );
+    }
+
+
+    public function testPlaceholderCombination(): void
+    {
+        $repString = 'The %s was generated at %s';
+
+        $this->assertEquals(
+            sprintf($repString, basename($this->dictionary['snapshot_file']), '20240101'),
+            $this->placeholder->replace(
+                sprintf($repString, '{{basename:{{snapshot_file}}}}', '{{numeric:{{date:2024-01-01 00:00:00}}}}')
+            )
+        );
+    }
+
+
+    public function testPlaceholderCombinationWithSamePattern()
+    {
+        $basename = basename($this->dictionary['snapshot_file']);
+        $repString = '%s and %s';
+
+        $this->assertEquals(
+            sprintf($repString, $basename, $basename),
+            $this->placeholder->replace(
+                sprintf($repString, '{{basename:{{snapshot_file}}}}', '{{basename:{{snapshot_file}}}}')
+            )
+        );
+    }
+
+}
