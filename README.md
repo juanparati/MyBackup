@@ -1,3 +1,5 @@
+![Build status](https://github.com/juanparati/MyBackup/actions/workflows/php.yml/badge.svg)
+
 # MyBackup
 
        __  ___     ___           __           
@@ -5,7 +7,6 @@
      / /|_/ / // / _  / _ `/ __/  '_/ // / _ \
     /_/  /_/\_, /____/\_,_/\__/_/\_\\_,_/ .__/
            /___/ MySQL/MariaDB backup  /_/
-
 
 ## What is it?
 
