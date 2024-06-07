@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Models\Enums\FilePathScope;
 use App\Models\Exceptions\ConfigFileException;
+use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Yaml\Exception\ParseException;
 use Symfony\Component\Yaml\Yaml;
 
@@ -23,13 +24,13 @@ class Config implements \ArrayAccess
         $filePath = FilePath::fromPath($filePath);
 
         if (! $filePath->exists(FilePathScope::EXTERNAL)) {
-            throw new ConfigFileException('Unable to find config file', EXIT_NOINPUT);
+            throw new ConfigFileException('Unable to find config file', Command::FAILURE);
         }
 
         try {
             $config = Yaml::parseFile($filePath->absolutePath());
         } catch (ParseException $e) {
-            throw new ConfigFileException($e->getMessage(), EXIT_DATAERR);
+            throw new ConfigFileException($e->getMessage(), Command::FAILURE);
         }
 
         return new static($config);

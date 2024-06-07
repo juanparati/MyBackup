@@ -2,7 +2,6 @@
 
 namespace App\Commands;
 
-use App\Models\Catalog;
 use App\Models\Lock;
 use Illuminate\Console\Concerns\PromptsForMissingInput;
 use LaravelZero\Framework\Commands\Command;
@@ -44,5 +43,7 @@ class UnlockCommand extends BackupCommand implements \Illuminate\Contracts\Conso
         Lock::unlock();
 
         $this->output->success('🔓 Lock removed!');
+
+        return Command::SUCCESS;
     }
 }

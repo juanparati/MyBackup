@@ -6,6 +6,7 @@ use App\Models\Config;
 use App\Models\Enums\FilePathScope;
 use App\Models\FilePath;
 use Illuminate\Console\Concerns\PromptsForMissingInput;
+use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Yaml\Yaml;
 
 class InitCommand extends BackupCommand implements \Illuminate\Contracts\Console\PromptsForMissingInput
@@ -45,15 +46,13 @@ class InitCommand extends BackupCommand implements \Illuminate\Contracts\Console
             if (! $this->option('overwrite')) {
                 $this->error('Unable to overwrite configuration file, please delete the file or use the --overwrite option');
 
-                return EXIT_FAILURE;
+                return Command::FAILURE;
             }
         }
 
         if (! $configFile->hasExtension('.yaml')) {
             $configFile->addExtension('.yaml');
         }
-
-        //$this->newLine()->info('Creating new configuration file'$this->line('')
 
         $config = Config::generateConfig(
             uniqid('Backup '),
@@ -64,6 +63,6 @@ class InitCommand extends BackupCommand implements \Illuminate\Contracts\Console
         file_put_contents($configFile, Yaml::dump($config));
         $this->output->success('📝 Plan created');
 
-        return EXIT_SUCCESS;
+        return Command::SUCCESS;
     }
 }

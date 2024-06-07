@@ -1,33 +1,45 @@
 <?php
 
+namespace Tests\Unit;
+
 use App\Helpers\DeclarativeHumanDate;
+use Carbon\CarbonInterface;
+use Tests\TestCase;
 
-$current = now()->toImmutable();
+class DeclarativeHumanDateTest extends TestCase
+{
 
-test('relative to days', function () use ($current) {
-    expect(DeclarativeHumanDate::relative('1 day', $current)->toDateTimeString())
-        ->toBe($current->subDay()->toDateTimeString())
-        ->and(DeclarativeHumanDate::relative('2 days', $current)->toDateTimeString())
-        ->toBe($current->subDays(2)->toDateTimeString());
-});
+    const TIME_REFERENCES = [
+        'minute',
+        'hour',
+        'day',
+        'week',
+        'month',
+        'year'
+    ];
 
-test('relative to minutes', function () use ($current) {
-    expect(DeclarativeHumanDate::relative('1 minute', $current)->toDateTimeString())
-        ->toBe($current->subMinute()->toDateTimeString())
-        ->and(DeclarativeHumanDate::relative('2 minutes', $current)->toDateTimeString())
-        ->toBe($current->subMinutes(2)->toDateTimeString());
-});
+    protected CarbonInterface $currentDate;
 
-test('relative to months', function () use ($current) {
-    expect(DeclarativeHumanDate::relative('1 month', $current)->toDateTimeString())
-        ->toBe($current->subMonth()->toDateTimeString())
-        ->and(DeclarativeHumanDate::relative('2 months', $current)->toDateTimeString())
-        ->toBe($current->subMonths(2)->toDateTimeString());
-});
 
-test('relative to years', function () use ($current) {
-    expect(DeclarativeHumanDate::relative('1 year', $current)->toDateTimeString())
-        ->toBe($current->subYear()->toDateTimeString())
-        ->and(DeclarativeHumanDate::relative('2 years', $current)->toDateTimeString())
-        ->toBe($current->subYears(2)->toDateTimeString());
-});
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->currentDate = now()->toImmutable();
+    }
+
+    public function testRelativeTime() {
+        foreach (static::TIME_REFERENCES as $timeReference) {
+            foreach ([$timeReference, str($timeReference)->plural()] as $k => $reference) {
+                $diff = $k ? rand(2, 10) : 1;
+                $exp = $diff . ' ' . $reference;
+                $method = 'sub' . ucfirst($reference);
+
+                $this->assertEquals(
+                    DeclarativeHumanDate::relative($exp, $this->currentDate)->toDateTimeString(),
+                    $k ? $this->currentDate->{$method}($diff) : $this->currentDate->{$method}(),
+                    "Relative to $exp"
+                );
+            }
+        }
+    }
+}

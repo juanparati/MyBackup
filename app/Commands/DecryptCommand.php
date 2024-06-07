@@ -6,6 +6,7 @@ use App\Helpers\FileEncrypt;
 use App\Models\Enums\FilePathScope;
 use App\Models\FilePath;
 use Illuminate\Console\Concerns\PromptsForMissingInput;
+use Symfony\Component\Console\Command\Command;
 
 class DecryptCommand extends CommandBase
 {
@@ -36,7 +37,9 @@ class DecryptCommand extends CommandBase
 
         $this->title('Decrypt snapshot');
 
-        $this->readConfig();
+        if ($configErrorCode = $this->readConfig()) {
+            return $configErrorCode;
+        }
 
         // Read encrypted backup
         $backupFile = FilePath::fromPath($this->argument('backup_file'));
@@ -44,13 +47,13 @@ class DecryptCommand extends CommandBase
         if (! $backupFile->exists(FilePathScope::EXTERNAL)) {
             $this->error('Backup file doesn\'t exists');
 
-            return EXIT_DATAERR;
+            return Command::INVALID;
         }
 
-        if ($backupFile->hasExtension('.aes')) {
+        if (!$backupFile->hasExtension('.aes')) {
             $this->error('Backup file doesn\'t have .aes extension');
 
-            return EXIT_NOINPUT;
+            return Command::FAILURE;
         }
 
         $this->newLine()->info('🔏 Decrypting file...');
@@ -59,7 +62,7 @@ class DecryptCommand extends CommandBase
         if ($outputFile->exists()) {
             $this->error($outputFile.' already exists');
 
-            return EXIT_FAILURE;
+            return Command::FAILURE;
         }
 
         $result = FileEncrypt::decrypt(
@@ -73,7 +76,7 @@ class DecryptCommand extends CommandBase
         if (! $result) {
             $this->error('Unable to decrypt file');
 
-            return EXIT_CANTCREAT;
+            return Command::FAILURE;
         }
 
         $this->newLine();
@@ -86,5 +89,7 @@ class DecryptCommand extends CommandBase
         $this->line("Decrypted file as $outputFile");
 
         $this->output->success('👍 Backup decrypted!');
+
+        return Command::SUCCESS;
     }
 }

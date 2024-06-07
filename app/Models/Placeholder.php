@@ -59,7 +59,7 @@ class Placeholder
         };
 
         // Replace by current time -/+ interval (Ex: {{date_calc:-10days}})
-        if (preg_match_all('/{{date_calc:([-+])([0-9]+)(minute|minutes|hour|hours|day|days|month|months|year|years)?}}/mU', $string, $matches, PREG_SET_ORDER)) {
+        if (preg_match_all('/{{date_calc:([-+])([0-9]+)(minute|minutes|hour|hours|day|days|week|weeks|month|months|year|years)?}}/mU', $string, $matches, PREG_SET_ORDER)) {
             foreach ($matches as $match) {
                 $date = match ($match[3] ?? 'hour') {
                     'minute', 'minutes' => now()->subMinutes($match[2]),
