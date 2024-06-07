@@ -52,6 +52,31 @@ class FilePath
         return $this->path;
     }
 
+
+    /**
+     * Copy file.
+     *
+     * @param string|FilePath $destination
+     * @param bool $ignoreErrors
+     * @return FilePath|static
+     */
+    public function copy(
+        string|FilePath $destination,
+        bool $returnNew = false,
+        bool $ignoreErrors = false
+    ): FilePath|static
+    {
+        try {
+            copy($this->path, $destination);
+        } catch (\Exception $e) {
+            if (!$ignoreError)
+                throw $e;
+        }
+
+        return $returnNew ? FilePath::fromPath($destination) : $this;
+    }
+
+
     /**
      * Return file extension.
      */
@@ -88,6 +113,24 @@ class FilePath
         foreach ($extensions as $extension) {
             $this->path .= ($extension[0] === '.' ? '' : '.') . $extension;
         }
+
+        return $this;
+    }
+
+    /**
+     * Unwrap file extensions.
+     *
+     * @param int $extensions
+     * @return $this
+     */
+    public function unwrapExtension(int $extensions = 1): static
+    {
+        $fileParts = str($this->path)
+            ->explode('.');
+
+        $this->path = $fileParts
+                ->take($fileParts->count() - $extensions)
+                ->implode('.');
 
         return $this;
     }

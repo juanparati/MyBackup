@@ -315,7 +315,7 @@ File names can be automatically generated using placeholders. The following plac
 - {{date}} - It will generate the current date in format YYYY-mm-dd.
 - {{datetime}} - It will generate the current date and time using the format YYYY-mm-dd HH:ii:ss.
 - {{timestamp}} - It will generate the current UNIX timestamp.
-- {{date_calc:}} - It will generate a relative date and time using the format YYYY-mm-dd. Example: {{date_calc:-2days}} or {{date_calc:+1month}}.
+- {{date_calc:}} - It will generate a relative date and time using the format YYYY-mm-dd HH:ii:ss. Example: {{date_calc:-2days}} or {{date_calc:+1month}}.
 - {{uuid}} - It will generate a UUID7.
 
 ### Special placeholders

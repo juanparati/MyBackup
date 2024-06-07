@@ -278,7 +278,7 @@ class MySQLDump
                 exec($command, $output, $status);
 
                 if ($status !== Command::SUCCESS) {
-                    throw new \RuntimeException('unable to dump snapshot');
+                    throw new \RuntimeException("Unable to dump snapshot: $command");
                 }
 
                 file_put_contents($this->snapshotFile->absolutePath(), "\n\n", FILE_APPEND);

@@ -3,6 +3,7 @@
 namespace Tests\Unit;
 
 use App\Models\Placeholder;
+use Ramsey\Uuid\Uuid;
 use Tests\TestCase;
 
 class PlaceholderTest extends TestCase
@@ -96,10 +97,18 @@ class PlaceholderTest extends TestCase
 
     public function testReplaceByRelativeTime(): void
     {
-        $this->assertEquals(
-            now()->subHour()->toDateTimeString(),
-            $this->placeholder->replace('{{date_calc:-1hour}}')
-        );
+        foreach (DeclarativeHumanDateTest::TIME_REFERENCES as $timeReference) {
+            foreach ([$timeReference, str($timeReference)->plural()] as $k => $reference) {
+                $method = 'sub' . ucfirst($reference);
+                $date = ($k ? now()->{$method}($k) : now()->{$method}())->toDateTimeString();
+
+                $this->assertEquals(
+                    $date,
+                    $this->placeholder->replace("{{date_calc:-1$timeReference}}"),
+                    "Replace relative $timeReference"
+                );
+            }
+        }
     }
 
 
@@ -126,6 +135,21 @@ class PlaceholderTest extends TestCase
             $this->placeholder->replace(
                 sprintf($repString, '{{basename:{{snapshot_file}}}}', '{{basename:{{snapshot_file}}}}')
             )
+        );
+    }
+
+
+    public function testPlaceholderUuidCombination()
+    {
+        $datetime = '2024-01-01 00:00:00';
+
+        $this->assertStringStartsWith(
+            '018cc251-f400-',
+            $this->placeholder->replace("{{uuid:$datetime}}")
+        );
+
+        $this->assertTrue(
+            Uuid::isValid($this->placeholder->replace("{{uuid:{{date_calc:-1week}}}}"))
         );
     }
 

@@ -176,8 +176,9 @@ class BackupCommand extends CommandBase
                 $dump->addDatabase($db['database']);
 
                 $planList[] = [
+                    'num'      => count($planList) + 1,
                     'database' => $db['database'],
-                    'table' => '*'
+                    'table'    => '*'
                 ];
 
                 if ($db['ignore']) {
@@ -193,13 +194,14 @@ class BackupCommand extends CommandBase
                 $dump->addTable($db['database'], $table['table'], $table['where']);
                 //$this->line("- The table {$db['database']}.{$table['table']} is going to be added");
                 $planList[] = [
+                    'num'      => count($planList) + 1,
                     'database' => $db['database'],
                     'table'    => $table['table'],
                 ];
             }
         }
 
-        $this->table(['Database', 'Table', 'Ignore'], $planList);
+        $this->table(['Num', 'Database', 'Table', 'Ignore'], $planList);
 
         if (!$this->option('dry')) {
             $this->newLine()->info('Dumping snapshot, please be patience...');

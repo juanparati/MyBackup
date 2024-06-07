@@ -37,7 +37,9 @@ class DecryptCommand extends CommandBase
 
         $this->title('Decrypt snapshot');
 
-        $this->readConfig();
+        if ($configErrorCode = $this->readConfig()) {
+            return $configErrorCode;
+        }
 
         // Read encrypted backup
         $backupFile = FilePath::fromPath($this->argument('backup_file'));
@@ -48,7 +50,7 @@ class DecryptCommand extends CommandBase
             return Command::INVALID;
         }
 
-        if ($backupFile->hasExtension('.aes')) {
+        if (!$backupFile->hasExtension('.aes')) {
             $this->error('Backup file doesn\'t have .aes extension');
 
             return Command::FAILURE;
