@@ -59,4 +59,4 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: mybackup.phar
-        path: builds/mybackup.phar.txt
+        path: builds/mybackup.phar
