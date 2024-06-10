@@ -19,7 +19,10 @@ class InitCommand extends BackupCommand implements \Illuminate\Contracts\Console
      * @var string
      */
     protected $signature = 'init {config_file=backup_plan.yaml : configuration file}       
-        {--overwrite : overwrite old configuration file}';
+        {--overwrite : overwrite old configuration file}
+        {--catalog_path= : Path to catalog file}
+        {--snapshot_path= : Path to snapshot file}
+    ';
 
     /**
      * The description of the command.
@@ -56,8 +59,8 @@ class InitCommand extends BackupCommand implements \Illuminate\Contracts\Console
 
         $config = Config::generateConfig(
             uniqid('Backup '),
-            getcwd().'/catalog.sqlite',
-            getcwd().'/snapshot_{{numeric:{{datetime}}}}.sql'
+            ($this->option('catalog_path') ?: getcwd()) . '/catalog.sqlite',
+            ($this->option('snapshot_path') ?: getcwd()) . '/snapshot_{{numeric:{{datetime}}}}.sql'
         );
 
         file_put_contents($configFile, Yaml::dump($config));

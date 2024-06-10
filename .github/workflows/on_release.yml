@@ -1,0 +1,60 @@
+name: Create release
+
+on:
+  release:
+    types: [created]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Setup PHP with PECL extension
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: '8.3'
+        ini-values: phar.readonly=Off
+
+    - uses: actions/checkout@v4
+
+    - name: Setting vars
+      id: vars
+      run: echo ::set-output name=distname::$(echo ${{ github.event.repository.name }}-$(git tag | tail -1).zip)
+
+    - name: Get Latest Tag
+      id: previoustag
+      uses: WyriHaximus/github-action-get-previous-tag@v1
+      with:
+        fallback: 1.0.0
+
+    - name: Validate composer.json and composer.lock
+      run: composer validate --strict
+
+    - name: Cache Composer packages
+      id: composer-cache
+      uses: actions/cache@v3
+      with:
+        path: vendor
+        key: ${{ runner.os }}-php-${{ hashFiles('**/composer.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-php-
+
+    - name: Install dependencies
+      run: composer install --prefer-dist --no-progress
+
+    # Add a test script to composer.json, for instance: "test": "vendor/bin/phpunit"
+    # Docs: https://getcomposer.org/doc/articles/scripts.md
+
+    - name: Run test suite
+      run: composer run-script test
+
+    - name: Creating application
+      run: php application app:build mybackup.phar --build-version=${{ steps.previoustag.outputs.tag }}
+
+    - name: Upload release
+      uses: JasonEtco/upload-to-release@master
+      with:
+        args: ./builds/mybackup.phar application/octet-stream
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
