@@ -55,9 +55,8 @@ jobs:
     - name: Creating application
       run: php application app:build mybackup.phar --build-version=${{ steps.previoustag.outputs.tag }}
 
-    - name: Upload release
-      uses: JasonEtco/upload-to-release@master
+    - name: Upload release artifact
+      uses: actions/upload-artifact@v4
       with:
-        args: ./builds/mybackup.phar application/octet-stream
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        name: mybackup.phar
+        path: builds/mybackup.phar.txt
