@@ -1,4 +1,4 @@
-![Build status](https://github.com/juanparati/MyBackup/actions/workflows/php.yml/badge.svg)
+![Last release](https://github.com/juanparati/MyBackup/actions/workflows/on_release.yml/badge.svg)
 
 # MyBackup
 

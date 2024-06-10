@@ -40,7 +40,7 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-php-
 
-    - name: Install dependencies
+    - name: Install dependencies (Dev)
       run: composer install --prefer-dist --no-progress
 
     # Add a test script to composer.json, for instance: "test": "vendor/bin/phpunit"
@@ -48,6 +48,9 @@ jobs:
 
     - name: Run test suite
       run: composer run-script test
+
+    - name: Install dependencies (Production)
+      run: composer install --prefer-dist --no-progress --no-dev
 
     - name: Creating application
       run: php application app:build mybackup.phar --build-version=${{ steps.previoustag.outputs.tag }}
