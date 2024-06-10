@@ -58,6 +58,9 @@ jobs:
     - name: Creating application
       run: php application app:build mybackup.phar --build-version=${{ steps.previoustag.outputs.tag }} -n -q
 
+    - name: Ensure the PHAR works
+      run: php builds/mybackup.phar --version
+
     - name: Upload release artifact
       uses: svenstaro/upload-release-action@v2
       with:
