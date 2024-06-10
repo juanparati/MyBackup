@@ -56,7 +56,9 @@ jobs:
       run: php application app:build mybackup.phar --build-version=${{ steps.previoustag.outputs.tag }}
 
     - name: Upload release artifact
-      uses: actions/upload-artifact@v4
+      uses: svenstaro/upload-release-action@v2
       with:
-        name: mybackup.phar
-        path: builds/mybackup.phar
+        repo_token: ${{ secrets.GITHUB_TOKEN }}
+        file: builds/mybackup.phar
+        asset_name: mybackup.phar
+        overwrite: true
