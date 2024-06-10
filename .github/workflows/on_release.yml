@@ -4,6 +4,9 @@ on:
   release:
     types: [created]
 
+permissions:
+  contents: write
+
 jobs:
   build:
 
@@ -53,7 +56,7 @@ jobs:
       run: composer install --prefer-dist --no-progress --no-dev
 
     - name: Creating application
-      run: php application app:build mybackup.phar --build-version=${{ steps.previoustag.outputs.tag }}
+      run: php application app:build mybackup.phar --build-version=${{ steps.previoustag.outputs.tag }} -n -q
 
     - name: Upload release artifact
       uses: svenstaro/upload-release-action@v2
