@@ -8,20 +8,17 @@ use Tests\TestCase;
 
 class PlaceholderTest extends TestCase
 {
-
     protected array $dictionary = [
         'snapshot_file' => '/foo/bar/file123.sql',
     ];
 
     protected Placeholder $placeholder;
 
-
     protected function setUp(): void
     {
         parent::setUp();
         $this->placeholder = new Placeholder($this->dictionary);
     }
-
 
     public function testReplaceFromDictionary(): void
     {
@@ -38,7 +35,6 @@ class PlaceholderTest extends TestCase
         );
     }
 
-
     public function testReplaceByDate(): void
     {
         $this->assertEquals(
@@ -51,7 +47,6 @@ class PlaceholderTest extends TestCase
             $this->placeholder->replace('{{date:2024-01-01 03:33:12}}')
         );
     }
-
 
     public function testReplaceByDateTime(): void
     {
@@ -66,7 +61,6 @@ class PlaceholderTest extends TestCase
         );
     }
 
-
     public function testReplaceByTimestamp(): void
     {
         $this->assertEquals(
@@ -79,7 +73,6 @@ class PlaceholderTest extends TestCase
             $this->placeholder->replace('{{timestamp:2024-01-01 00:00:00}}')
         );
     }
-
 
     public function testByNumeric(): void
     {
@@ -94,12 +87,11 @@ class PlaceholderTest extends TestCase
         );
     }
 
-
     public function testReplaceByRelativeTime(): void
     {
         foreach (DeclarativeHumanDateTest::TIME_REFERENCES as $timeReference) {
             foreach ([$timeReference, str($timeReference)->plural()] as $k => $reference) {
-                $method = 'sub' . ucfirst($reference);
+                $method = 'sub'.ucfirst($reference);
                 $date = ($k ? now()->{$method}($k) : now()->{$method}())->toDateTimeString();
 
                 $this->assertEquals(
@@ -110,7 +102,6 @@ class PlaceholderTest extends TestCase
             }
         }
     }
-
 
     public function testPlaceholderCombination(): void
     {
@@ -123,7 +114,6 @@ class PlaceholderTest extends TestCase
             )
         );
     }
-
 
     public function testPlaceholderCombinationWithSamePattern()
     {
@@ -138,7 +128,6 @@ class PlaceholderTest extends TestCase
         );
     }
 
-
     public function testPlaceholderUuidCombination()
     {
         $datetime = '2024-01-01 00:00:00';
@@ -149,8 +138,7 @@ class PlaceholderTest extends TestCase
         );
 
         $this->assertTrue(
-            Uuid::isValid($this->placeholder->replace("{{uuid:{{date_calc:-1week}}}}"))
+            Uuid::isValid($this->placeholder->replace('{{uuid:{{date_calc:-1week}}}}'))
         );
     }
-
 }

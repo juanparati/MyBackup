@@ -15,8 +15,8 @@ use App\Models\MySQLDump;
 use App\Models\Placeholder;
 use App\Notifications\BackupFinishedNotification;
 use Illuminate\Support\Facades\Process;
-
 use Symfony\Component\Console\Command\Command;
+
 use function Laravel\Prompts\password;
 
 class BackupCommand extends CommandBase
@@ -50,7 +50,7 @@ class BackupCommand extends CommandBase
 
         unset($configErrorCode);
 
-        if (!isset($this->config->connection['password'])) {
+        if (! isset($this->config->connection['password'])) {
             $this->config->connection = array_merge(
                 $this->config->connection,
                 ['password' => password('DB Password? (Blank = no password)')]
@@ -60,12 +60,12 @@ class BackupCommand extends CommandBase
         $this->prepareCatalog();
         $this->setupFilesystems();
 
-        if (!$this->option('dry')) {
+        if (! $this->option('dry')) {
             $this->newLine()->info('Checking lock...');
 
             if (Lock::hasLock()) {
                 $this->error('Backup process is locked');
-                $this->line('If the backup failed run ' . EXECUTABLE . ' unlock ' . $this->argument('config_file'));
+                $this->line('If the backup failed run '.EXECUTABLE.' unlock '.$this->argument('config_file'));
 
                 return 0;
             }
@@ -77,11 +77,11 @@ class BackupCommand extends CommandBase
         try {
             $exitCode = $this->executeTasks();
         } catch (\Exception $e) {
-            $this->error('Unable to perform backup: ' . $e->getMessage());
+            $this->error('Unable to perform backup: '.$e->getMessage());
             $exitCode = Command::FAILURE;
         }
 
-        if (!$this->option('dry')) {
+        if (! $this->option('dry')) {
             Lock::unlock();
             $this->info('Lock destroyed');
         }
@@ -104,8 +104,8 @@ class BackupCommand extends CommandBase
             $this->line('Unable to locate MySQL dump... trying to locate automatically');
             $mysqlDumpPathSearch = Process::run(['which', $mysqlDumpPath->basename()]);
 
-            if (!$mysqlDumpPathSearch->successful()) {
-                $this->error('Unable to find ' . $mysqlDumpPath);
+            if (! $mysqlDumpPathSearch->successful()) {
+                $this->error('Unable to find '.$mysqlDumpPath);
 
                 return Command::FAILURE;
             }
@@ -144,7 +144,7 @@ class BackupCommand extends CommandBase
 
         $this->newLine()->info('Creating backup plan...');
         $snapshotFile = FilePath::fromPath((new Placeholder())->replace($this->config->snapshot_file));
-        $this->line('Snapshot file: ' . $snapshotFile->path());
+        $this->line('Snapshot file: '.$snapshotFile->path());
 
         if ($snapshotFile->exists(FilePathScope::EXTERNAL)) {
             $this->error('Snapshot already exists!');
@@ -176,9 +176,9 @@ class BackupCommand extends CommandBase
                 $dump->addDatabase($db['database']);
 
                 $planList[] = [
-                    'num'      => count($planList) + 1,
+                    'num' => count($planList) + 1,
                     'database' => $db['database'],
-                    'table'    => '*'
+                    'table' => '*',
                 ];
 
                 if ($db['ignore']) {
@@ -194,36 +194,36 @@ class BackupCommand extends CommandBase
                 $dump->addTable($db['database'], $table['table'], $table['where']);
                 //$this->line("- The table {$db['database']}.{$table['table']} is going to be added");
                 $planList[] = [
-                    'num'      => count($planList) + 1,
+                    'num' => count($planList) + 1,
                     'database' => $db['database'],
-                    'table'    => $table['table'],
+                    'table' => $table['table'],
                 ];
             }
         }
 
         $this->table(['Num', 'Database', 'Table', 'Ignore'], $planList);
 
-        if (!$this->option('dry')) {
+        if (! $this->option('dry')) {
             $this->newLine()->info('Dumping snapshot, please be patience...');
             $dump->initialize()->process($this->output);
             $this->newLine()->line('Snapshot saved');
 
             // Compress snapshot if proceeds
             if ($this->config->compress) {
-                $compressedSnapshot = FilePath::fromPath($snapshotFile->absolutePath() . '.gz');
+                $compressedSnapshot = FilePath::fromPath($snapshotFile->absolutePath().'.gz');
                 $this->newLine()->info('Compressing snapshot...');
                 (new GzipCompressor($snapshotFile->absolutePath(), $compressedSnapshot->path()))
                     ->gzip($this->config->compression_level ?: 6, $this->output);
                 $snapshotFile->rm();
                 $snapshotFile = $compressedSnapshot;
                 unset($compressedSnapshot);
-                $this->newLine()->line('Snapshot was compressed as: ' . $snapshotFile->absolutePath());
+                $this->newLine()->line('Snapshot was compressed as: '.$snapshotFile->absolutePath());
             }
 
             // Encrypt snapshot if proceeds
             if ($this->config->encryption['key'] ?? null) {
                 $this->newLine()->info('Encrypting snapshot...');
-                $encryptedSnapshot = FilePath::fromPath($snapshotFile->absolutePath() . '.aes');
+                $encryptedSnapshot = FilePath::fromPath($snapshotFile->absolutePath().'.aes');
                 $encrypted = FileEncrypt::encrypt(
                     $snapshotFile->absolutePath(),
                     $encryptedSnapshot->path(),
@@ -232,7 +232,7 @@ class BackupCommand extends CommandBase
                     $this->output
                 );
 
-                if (!$encrypted) {
+                if (! $encrypted) {
                     $this->error('Unable to encrypt snapshot file');
 
                     return Command::FAILURE;
@@ -241,7 +241,7 @@ class BackupCommand extends CommandBase
                 $snapshotFile->rm();
                 $snapshotFile = $encryptedSnapshot;
                 unset($encryptedSnapshot);
-                $this->newLine()->line('Snapshot was encrypted as: ' . $snapshotFile->absolutePath());
+                $this->newLine()->line('Snapshot was encrypted as: '.$snapshotFile->absolutePath());
 
             }
 
@@ -250,12 +250,12 @@ class BackupCommand extends CommandBase
 
             $snapshotInfo = [
                 'snapshot' => $snapshotFile->absolutePath(),
-                'crc'      => $snapshotFile->md5(),
-                'size'     => $snapshotFile->size(),
+                'crc' => $snapshotFile->md5(),
+                'size' => $snapshotFile->size(),
             ];
 
             $lastCreatedCatalog = Catalog::create($snapshotInfo);
-            $this->line('Registered snapshot CRC: ' . $snapshotInfo['crc']);
+            $this->line('Registered snapshot CRC: '.$snapshotInfo['crc']);
 
             // Rotate backups
             if ($this->config->backup_rotation !== null) {
@@ -275,7 +275,7 @@ class BackupCommand extends CommandBase
                 foreach ($catalogItems as $catalogItem) {
                     @unlink($catalogItem->snapshot);
                     $catalogItem->delete();
-                    $this->line('- Removed: ' . $catalogItem->snapshot);
+                    $this->line('- Removed: '.$catalogItem->snapshot);
                 }
 
                 $this->line('Rotated backup elements');
@@ -285,7 +285,7 @@ class BackupCommand extends CommandBase
             if ($this->config->post_actions) {
                 $this->runActions([
                     'snapshot_file' => $snapshotInfo['snapshot'],
-                    'crc'           => $snapshotInfo['crc'],
+                    'crc' => $snapshotInfo['crc'],
                 ]);
             }
 
@@ -310,9 +310,9 @@ class BackupCommand extends CommandBase
         foreach ($this->config->post_actions as $k => $action) {
             $actionName = array_key_first($action);
             $instructions = $action[$actionName];
-            $actionClass = 'App\\Actions\\' . str($actionName)->camel()->ucfirst() . 'Action';
+            $actionClass = 'App\\Actions\\'.str($actionName)->camel()->ucfirst().'Action';
 
-            if (!class_exists($actionClass)) {
+            if (! class_exists($actionClass)) {
                 $this->warn("Action [$k] $actionName is not available");
 
                 continue;
@@ -348,9 +348,9 @@ class BackupCommand extends CommandBase
         foreach ($this->config->databases as $k => $db) {
             $dbList[$k] = [
                 'options' => [],
-                'tables'  => [],
-                'ignore'  => [],
-                'to'      => null,
+                'tables' => [],
+                'ignore' => [],
+                'to' => null,
             ];
 
             $currentList = &$dbList[$k];

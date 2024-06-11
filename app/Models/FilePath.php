@@ -52,30 +52,24 @@ class FilePath
         return $this->path;
     }
 
-
     /**
      * Copy file.
-     *
-     * @param string|FilePath $destination
-     * @param bool $ignoreErrors
-     * @return FilePath|static
      */
     public function copy(
         string|FilePath $destination,
         bool $returnNew = false,
         bool $ignoreErrors = false
-    ): FilePath|static
-    {
+    ): FilePath|static {
         try {
             copy($this->path, $destination);
         } catch (\Exception $e) {
-            if (!$ignoreError)
+            if (! $ignoreError) {
                 throw $e;
+            }
         }
 
         return $returnNew ? FilePath::fromPath($destination) : $this;
     }
-
 
     /**
      * Return file extension.
@@ -111,7 +105,7 @@ class FilePath
         $extensions = is_array($extensions[0]) ? $extensions[0] : $extensions;
 
         foreach ($extensions as $extension) {
-            $this->path .= ($extension[0] === '.' ? '' : '.') . $extension;
+            $this->path .= ($extension[0] === '.' ? '' : '.').$extension;
         }
 
         return $this;
@@ -120,7 +114,6 @@ class FilePath
     /**
      * Unwrap file extensions.
      *
-     * @param int $extensions
      * @return $this
      */
     public function unwrapExtension(int $extensions = 1): static
@@ -129,8 +122,8 @@ class FilePath
             ->explode('.');
 
         $this->path = $fileParts
-                ->take($fileParts->count() - $extensions)
-                ->implode('.');
+            ->take($fileParts->count() - $extensions)
+            ->implode('.');
 
         return $this;
     }
@@ -138,21 +131,21 @@ class FilePath
     /**
      * Expand directory path.
      *
-     * @param ...$subDirs
      * @return $this
      */
     public function expand(...$subDirs): static
     {
         $subDirs = is_array($subDirs[0]) ? $subDirs[0] : $subDirs;
 
-        if ($this->path[-1] !== DS)
+        if ($this->path[-1] !== DS) {
             $this->path .= DS;
+        }
 
         $this->path .= implode(DS, $subDirs);
-        $this->path = preg_replace('#' . DS . '+#',DS, $this->path);
+        $this->path = preg_replace('#'.DS.'+#', DS, $this->path);
+
         return $this;
     }
-
 
     /**
      * Check if file exists.

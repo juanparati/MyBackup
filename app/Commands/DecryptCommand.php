@@ -50,7 +50,7 @@ class DecryptCommand extends CommandBase
             return Command::INVALID;
         }
 
-        if (!$backupFile->hasExtension('.aes')) {
+        if (! $backupFile->hasExtension('.aes')) {
             $this->error('Backup file doesn\'t have .aes extension');
 
             return Command::FAILURE;

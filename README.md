@@ -308,6 +308,47 @@ The available post actions are:
 - copy (Copy a file)
 - delete_old (Delete an old file).
 
+## Environment variables
+
+It's possible to use environment variables as part of the configuration.
+
+Environment variables can be defined using the following pattern "%env(KEY:DEFAULT_VALUE)%".
+
+Example:
+
+      password: '%env(DB_PASSWORD:secret)%'
+
+In the previous example the "password" is taken from the environment variable "DB_PASSWORD" and in case the variable is undefined the default value "secret" is used.
+
+The default value is optional.
+
+### Cast environment variables
+
+It's also possible to cast the environment values.
+
+Example:
+
+      compress: '%env(bool->COMPRESS)%'
+
+In the previous example the "COMPRESS" environment variable is taken and cast as boolean.
+
+The following casts are available:
+
+- string (Default)
+- bool (When variable is equal to "true" or 1 then is cast as true)
+- int
+- float
+- json (Convert a JSON string into an array)
+
+In the following example we can provide the connection details using one environment variable:
+
+      connection: '%env(json->CONNECTION)%'
+
+the "CONNECTION" environment variable can have a value like the following one:
+
+      CONNECTION={"driver":"mysql","host":"localhost","port":3306,"username":"root","password":"secret"}
+
+
 ## Placeholders
 
 File names can be automatically generated using placeholders. The following placeholders are available:

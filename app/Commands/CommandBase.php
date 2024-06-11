@@ -36,7 +36,7 @@ abstract class CommandBase extends Command implements \Illuminate\Contracts\Cons
             return $e->getCode();
         }
 
-        $this->line('Configuration successfully read for plan: <options=bold>' . $this->config->name . '</options=bold>');
+        $this->line('Configuration successfully read for plan: <options=bold>'.$this->config->name.'</options=bold>');
 
         return null;
     }
@@ -53,7 +53,7 @@ abstract class CommandBase extends Command implements \Illuminate\Contracts\Cons
 
         $runMigration = false;
 
-        if (!$catalogFile->exists(FilePathScope::EXTERNAL)) {
+        if (! $catalogFile->exists(FilePathScope::EXTERNAL)) {
             touch($catalogFile->path());
             $runMigration = true;
         }
@@ -76,7 +76,7 @@ abstract class CommandBase extends Command implements \Illuminate\Contracts\Cons
                 $table->timestamps();
             });
 
-            $this->line('💾 Created catalog file at: ' . config('database.connections.default.database'));
+            $this->line('💾 Created catalog file at: '.config('database.connections.default.database'));
         }
 
     }
@@ -90,7 +90,7 @@ abstract class CommandBase extends Command implements \Illuminate\Contracts\Cons
 
         $filesystems['local'] = [
             'driver' => 'local',
-            'root'   => dirname($this->config->snapshot_file),
+            'root' => dirname($this->config->snapshot_file),
         ];
 
         config(['filesystems.disks' => $filesystems]);

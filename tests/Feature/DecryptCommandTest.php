@@ -2,10 +2,8 @@
 
 namespace Feature;
 
-use App\Commands\InitCommand;
 use App\Helpers\FileEncrypt;
 use App\Models\FilePath;
-use Illuminate\Support\Facades\File;
 use Symfony\Component\Yaml\Yaml;
 use Tests\RequiresTmpFilesystem;
 use Tests\TestCase;
@@ -14,10 +12,10 @@ class DecryptCommandTest extends TestCase
 {
     use RequiresTmpFilesystem;
 
-
-    public function testDecryptCommand(): void {
-        $confFile = FilePath::fromPath(__DIR__ . '/../Fixtures/config_base.yaml');
-        $encryptedFile = FilePath::fromPath(static::$tmpDir . 'file.sql.aes');
+    public function testDecryptCommand(): void
+    {
+        $confFile = FilePath::fromPath(__DIR__.'/../Fixtures/config_base.yaml');
+        $encryptedFile = FilePath::fromPath(static::$tmpDir.'file.sql.aes');
 
         $conf = Yaml::parseFile($confFile);
 
@@ -40,5 +38,4 @@ class DecryptCommandTest extends TestCase
 
         $this->assertFileExists($encryptedFile->unwrapExtension());
     }
-
 }

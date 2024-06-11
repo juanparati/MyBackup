@@ -59,8 +59,8 @@ class InitCommand extends BackupCommand implements \Illuminate\Contracts\Console
 
         $config = Config::generateConfig(
             uniqid('Backup '),
-            ($this->option('catalog_path') ?: getcwd()) . '/catalog.sqlite',
-            ($this->option('snapshot_path') ?: getcwd()) . '/snapshot_{{numeric:{{datetime}}}}.sql'
+            ($this->option('catalog_path') ?: getcwd()).'/catalog.sqlite',
+            ($this->option('snapshot_path') ?: getcwd()).'/snapshot_{{numeric:{{datetime}}}}.sql'
         );
 
         file_put_contents($configFile, Yaml::dump($config));

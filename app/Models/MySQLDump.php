@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use App\Commands\CommandBase;
 use App\Models\Enums\FilePathScope;
 use Illuminate\Console\OutputStyle;
 use Illuminate\Support\Arr;

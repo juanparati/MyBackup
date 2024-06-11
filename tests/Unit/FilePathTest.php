@@ -7,8 +7,8 @@ use Tests\TestCase;
 
 class FilePathTest extends TestCase
 {
-
-    public function testReplaceByHome() {
+    public function testReplaceByHome()
+    {
         $home = getenv('HOME');
 
         $this->assertEquals(
@@ -17,11 +17,10 @@ class FilePathTest extends TestCase
         );
 
         $this->assertEquals(
-            $home . '/foo/bar',
+            $home.'/foo/bar',
             FilePath::fromPath('~')->expand('foo', 'bar')->path()
         );
     }
-
 
     public function testAddExtension()
     {
@@ -35,5 +34,4 @@ class FilePathTest extends TestCase
             FilePath::fromPath('file.txt')->addExtension('.gz')->path()
         );
     }
-
 }

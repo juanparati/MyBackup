@@ -11,18 +11,16 @@ trait RequiresTmpFilesystem
     public static function setUpBeforeClass(): void
     {
         parent::setUpBeforeClass();
-        static::$tmpDir = sys_get_temp_dir() . '/mybackup_test/';
+        static::$tmpDir = sys_get_temp_dir().'/mybackup_test/';
 
-        if (!file_exists(static::$tmpDir)) {
+        if (! file_exists(static::$tmpDir)) {
             mkdir(static::$tmpDir);
         }
     }
-
 
     public static function tearDownAfterClass(): void
     {
         File::deleteDirectory(static::$tmpDir);
         parent::tearDownAfterClass();
     }
-
 }

@@ -10,6 +10,14 @@ use Symfony\Component\Yaml\Yaml;
 
 class Config implements \ArrayAccess
 {
+    /**
+     * Regular expression used by the environment variable placeholder.
+     */
+    protected const ENV_REGEXP = '/%env\((.*)\)%/';
+
+    /**
+     * Constructor.
+     */
     public function __construct(protected array $config)
     {
     }
@@ -33,7 +41,9 @@ class Config implements \ArrayAccess
             throw new ConfigFileException($e->getMessage(), Command::FAILURE);
         }
 
-        return new static($config);
+        return new static(
+            static::parseEnv($config)
+        );
     }
 
     public function __get(string $key): mixed
@@ -64,6 +74,58 @@ class Config implements \ArrayAccess
     public function offsetUnset(mixed $offset): void
     {
         unset($this->config[$offset]);
+    }
+
+    /**
+     * Parse environment.
+     *
+     * @return mixed
+     */
+    protected static function parseEnv($node)
+    {
+        if (! $node || is_bool($node) || is_numeric($node)) {
+            return $node;
+        }
+
+        if (is_array($node)) {
+            return array_map(fn ($r) => static::parseEnv($r), $node);
+        }
+
+        if (! preg_match_all(static::ENV_REGEXP, $node, $matches, PREG_SET_ORDER)) {
+            return $node;
+        }
+
+        foreach ($matches as $match) {
+            $keyAndDefault = explode(':', $match[1], 2);
+            $castAndKey = explode('->', $keyAndDefault[0], 2);
+
+            $key = $castAndKey[1] ?? $castAndKey[0];
+            $cast = empty($castAndKey[1]) ? 'string' : $castAndKey[0];
+
+            $node = static::castEnvValueAs(
+                $cast,
+                env($key, $keyAndDefault[1] ?? null)
+            );
+        }
+
+        return $node;
+    }
+
+    /**
+     * Cast environment values.
+     *
+     * @return bool|float|int|mixed|string
+     */
+    protected static function castEnvValueAs(string $cast, $value)
+    {
+        return match ($cast) {
+            'float' => (float) $value,
+            'string' => (string) $value,
+            'int', 'integer' => (int) $value,
+            'bool' => (strtolower($value) === 'true' || $value == 1),
+            'json' => json_decode($value, true),
+            default => $value,
+        };
     }
 
     /**

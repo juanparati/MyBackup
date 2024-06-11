@@ -9,11 +9,12 @@ class UnlockCommandTest extends TestCase
 {
     use RequiresTmpFilesystem;
 
-    public function testUnlockCommandOnMissing(): void {
+    public function testUnlockCommandOnMissing(): void
+    {
         $this->artisan(
             'init',
             [
-                'config_file' => static::$tmpDir . 'config.yaml',
+                'config_file' => static::$tmpDir.'config.yaml',
                 '--snapshot_path' => static::$tmpDir,
                 '--catalog_path' => static::$tmpDir,
             ]
@@ -21,7 +22,7 @@ class UnlockCommandTest extends TestCase
 
         $this->artisan(
             'unlock',
-            ['config_file' => static::$tmpDir . 'config.yaml']
+            ['config_file' => static::$tmpDir.'config.yaml']
         )->assertOk();
     }
 }

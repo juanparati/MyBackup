@@ -30,10 +30,10 @@ return [
 
     'channels' => [
         'stderr' => [
-            'driver'    => 'monolog',
-            'handler'   => StreamHandler::class,
+            'driver' => 'monolog',
+            'handler' => StreamHandler::class,
             'formatter' => null,
-            'with'      => [
+            'with' => [
                 'stream' => 'php://stderr',
             ],
         ],
