@@ -276,7 +276,13 @@ class MySQLDump
                 // dump($command);
                 exec($command, $output, $status);
 
+                if ($console?->isVerbose())
+                    $console?->comment($command);
+
                 if ($status !== Command::SUCCESS) {
+                    if ($console?->isVerbose())
+                        $console?->error($output);
+
                     throw new \RuntimeException("Unable to dump snapshot: $command");
                 }
 

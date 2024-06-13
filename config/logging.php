@@ -1,5 +1,6 @@
 <?php
 
+use Monolog\Handler\NullHandler;
 use Monolog\Handler\StreamHandler;
 
 return [
@@ -15,7 +16,7 @@ return [
     |
     */
 
-    'default' => 'stderr',
+    'default' => 'null',
 
     /*
     |--------------------------------------------------------------------------
@@ -36,6 +37,10 @@ return [
             'with' => [
                 'stream' => 'php://stderr',
             ],
+        ],
+        'null' => [
+            'driver'  => 'monolog',
+            'handler' => NullHandler::class,
         ],
     ],
 
