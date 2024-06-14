@@ -36,3 +36,8 @@ Icon
 Network Trash Folder
 Temporary Items
 .apdisk
+
+# Devbox
+devbox.json
+devbox.lock
+/devbox.d
