@@ -19,7 +19,7 @@ jobs:
       - run: curl -o spc https://dl.static-php.dev/static-php-cli/spc-bin/nightly/spc-macos-x86_64 && chmod +x spc
 
       # Run build command
-      - run: ./spc spc download --with-php=8.2 --for-extensions "bcmath,ctype,dom,fileinfo,filter,ftp,libxml,mbregex,mbstring,mysqlnd,openssl,pcntl,pdo,pdo_mysql,pdo_sqlite,phar,posix,session,simplexml,sockets,sqlite3,ssh2,tokenizer,xml,yaml,zip,zlib"
+      - run: ./spc download --with-php=8.2 --for-extensions "bcmath,ctype,dom,fileinfo,filter,ftp,libxml,mbregex,mbstring,mysqlnd,openssl,pcntl,pdo,pdo_mysql,pdo_sqlite,phar,posix,session,simplexml,sockets,sqlite3,ssh2,tokenizer,xml,yaml,zip,zlib"
 
       # Compile
       - run: ./spc build --build-micro "bcmath,ctype,dom,fileinfo,filter,ftp,libxml,mbregex,mbstring,mysqlnd,openssl,pcntl,pdo,pdo_mysql,pdo_sqlite,phar,posix,session,simplexml,sockets,sqlite3,ssh2,tokenizer,xml,yaml,zip,zlib"
