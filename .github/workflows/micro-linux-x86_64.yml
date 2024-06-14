@@ -1,4 +1,4 @@
-name: Build micro (Linux aarch64)
+name: Build micro (Linux x86)
 
 on: workflow_dispatch
 
