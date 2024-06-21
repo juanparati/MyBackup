@@ -318,13 +318,10 @@ class BackupCommand extends CommandBase
                 continue;
             }
 
-            $this->line("- Running action [$k] $actionName: ");
-
-            if ((new $actionClass($this->config, $placeholder, $instructions))()) {
-                $this->output->write('Ok');
-            } else {
-                $this->output->write('Fail');
-            }
+            $this->task(
+                "- Running action [$k] $actionName",
+                fn() => (new $actionClass($this->config, $placeholder, $instructions))()
+            );
         }
     }
 
