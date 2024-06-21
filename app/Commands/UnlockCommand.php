@@ -2,13 +2,14 @@
 
 namespace App\Commands;
 
+use App\Commands\Concerns\NeedCatalog;
+use App\Commands\Concerns\NeedConfig;
 use App\Models\Lock;
-use Illuminate\Console\Concerns\PromptsForMissingInput;
 use LaravelZero\Framework\Commands\Command;
 
-class UnlockCommand extends BackupCommand implements \Illuminate\Contracts\Console\PromptsForMissingInput
+class UnlockCommand extends CommandBase
 {
-    use PromptsForMissingInput;
+    use NeedConfig, NeedCatalog;
 
     /**
      * The signature of the command.

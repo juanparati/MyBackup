@@ -5,13 +5,11 @@ namespace App\Commands;
 use App\Models\Config;
 use App\Models\Enums\FilePathScope;
 use App\Models\FilePath;
-use Illuminate\Console\Concerns\PromptsForMissingInput;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Yaml\Yaml;
 
-class InitCommand extends BackupCommand implements \Illuminate\Contracts\Console\PromptsForMissingInput
+class InitCommand extends CommandBase
 {
-    use PromptsForMissingInput;
 
     /**
      * The signature of the command.

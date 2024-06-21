@@ -2,6 +2,10 @@
 
 namespace App\Commands;
 
+use App\Commands\Concerns\NeedCatalog;
+use App\Commands\Concerns\NeedConfig;
+use App\Commands\Concerns\NeedFilesystem;
+use App\Commands\Concerns\NeedTargetConnection;
 use App\Helpers\DBStatus;
 use App\Helpers\DeclarativeHumanDate;
 use App\Helpers\FileEncrypt;
@@ -21,6 +25,8 @@ use function Laravel\Prompts\password;
 
 class BackupCommand extends CommandBase
 {
+    use NeedConfig, NeedCatalog, NeedFilesystem, NeedTargetConnection;
+
     /**
      * The signature of the command.
      *
@@ -325,15 +331,7 @@ class BackupCommand extends CommandBase
         }
     }
 
-    protected function setTargetConnection(): void
-    {
-        config([
-            'database.connections.target' => array_merge(
-                config('database.connections.target'),
-                $this->config->connection
-            ),
-        ]);
-    }
+
 
     /**
      * Retrieve the list of databases and tables to back up.

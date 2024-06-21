@@ -2,13 +2,14 @@
 
 namespace App\Commands;
 
+use App\Commands\Concerns\NeedConfig;
+use App\Commands\Concerns\NeedTargetConnection;
 use App\Helpers\DBStatus;
-use Illuminate\Console\Concerns\PromptsForMissingInput;
 use LaravelZero\Framework\Commands\Command;
 
-class CheckReplicationCommand extends BackupCommand implements \Illuminate\Contracts\Console\PromptsForMissingInput
+class CheckReplicationCommand extends CommandBase
 {
-    use PromptsForMissingInput;
+    use NeedConfig, NeedTargetConnection;
 
     /**
      * The signature of the command.

@@ -2,15 +2,15 @@
 
 namespace App\Commands;
 
+use App\Commands\Concerns\NeedConfig;
 use App\Helpers\FileEncrypt;
 use App\Models\Enums\FilePathScope;
 use App\Models\FilePath;
-use Illuminate\Console\Concerns\PromptsForMissingInput;
 use Symfony\Component\Console\Command\Command;
 
 class DecryptCommand extends CommandBase
 {
-    use PromptsForMissingInput;
+   use NeedConfig;
 
     /**
      * The signature of the command.
