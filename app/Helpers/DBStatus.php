@@ -56,18 +56,11 @@ class DBStatus
             return false;
         }
 
-        $slaveStatus = collect(
-            $this->pdo->query('SHOW SLAVE STATUS')->fetchAll()
-        )->mapWithKeys(fn ($r) => [$r[0] => ctype_digit($r[1]) ? ((int) $r[1]) : $r[1]]);
+        $qry = $this->pdo
+            ->prepare('SELECT VARIABLE_VALUE FROM information_schema.GLOBAL_STATUS WHERE VARIABLE_NAME = "slave_running"');
 
-        if ($slaveStatus->isEmpty()) {
-            return false;
-        }
+        $qry->execute();
 
-        if (empty($slaveStatus['Slave_IO_Running']) || empty($slaveStatus['Slave_SQL_Running'])) {
-            return false;
-        }
-
-        return true;
+        return 'ON' ===  $qry->fetch(PDO::FETCH_ASSOC)['VARIABLE_VALUE'];
     }
 }
