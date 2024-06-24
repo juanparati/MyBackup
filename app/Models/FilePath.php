@@ -212,6 +212,25 @@ class FilePath
     }
 
     /**
+     * Create a subdirectory.
+     *
+     * @param string $dir
+     * @param int $permissions
+     * @param bool $returnNew
+     * @return $this
+     */
+    public function mkdir(string $dir, int $permissions = 0777, bool $returnNew = false): FilePath
+    {
+        $recursive = str_word_count(DS) > 1;
+        $target = str($this->path())->finish(DS) . $dir;
+
+        if (!mkdir($target, $permissions, $recursive))
+            throw new \RuntimeException('Unable to create directory $dir');
+
+        return $returnNew ? FilePath::fromPath($target) : $this;
+    }
+
+    /**
      * Truncate file.
      */
     public function truncate(): void
