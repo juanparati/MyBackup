@@ -2,15 +2,16 @@
 
 namespace App\Commands;
 
+use App\Commands\Concerns\NeedActions;
 use App\Commands\Concerns\NeedCatalog;
 use App\Commands\Concerns\NeedConfig;
 use App\Commands\Concerns\NeedFilesystem;
+use App\Commands\Concerns\NeedNotifications;
 use App\Commands\Concerns\NeedTargetConnection;
 use App\Helpers\DBStatus;
 use App\Helpers\DeclarativeHumanDate;
 use App\Helpers\FileEncrypt;
 use App\Helpers\GzipCompressor;
-use App\Helpers\NotificationSender;
 use App\Models\Catalog;
 use App\Models\Enums\FilePathScope;
 use App\Models\FilePath;
@@ -25,7 +26,7 @@ use function Laravel\Prompts\password;
 
 class BackupCommand extends CommandBase
 {
-    use NeedConfig, NeedCatalog, NeedFilesystem, NeedTargetConnection;
+    use NeedConfig, NeedCatalog, NeedFilesystem, NeedTargetConnection, NeedNotifications, NeedActions;
 
     /**
      * The signature of the command.
@@ -189,7 +190,6 @@ class BackupCommand extends CommandBase
 
                 if ($db['ignore']) {
                     $dump->addIgnoreTables($db['database'], $db['ignore']);
-                    //$this->line("- The following tables from {$db['database']} database are ignored: ".implode(', ', $db['ignore']));
                     $planList[count($planList) - 1]['ignore'] = implode(', ', $db['ignore']);
                 }
 
@@ -296,8 +296,7 @@ class BackupCommand extends CommandBase
             }
 
             // Send notification
-            (new NotificationSender($this->config->notifications ?? []))
-                ->send(BackupFinishedNotification::class, $snapshotInfo);
+            $this->sendNotification(BackupFinishedNotification::class, $snapshotInfo);
         }
 
         $this->output->success('👍 Backup process was successfully finished!');
@@ -305,32 +304,6 @@ class BackupCommand extends CommandBase
         return Command::SUCCESS;
 
     }
-
-    protected function runActions(array $dictionary): void
-    {
-
-        $this->newLine()->info('Running post actions');
-
-        $placeholder = new Placeholder($dictionary);
-
-        foreach ($this->config->post_actions as $k => $action) {
-            $actionName = array_key_first($action);
-            $instructions = $action[$actionName];
-            $actionClass = 'App\\Actions\\'.str($actionName)->camel()->ucfirst().'Action';
-
-            if (! class_exists($actionClass)) {
-                $this->warn("Action [$k] $actionName is not available");
-
-                continue;
-            }
-
-            $this->task(
-                "- Running action [$k] $actionName",
-                fn() => (new $actionClass($this->config, $placeholder, $instructions))()
-            );
-        }
-    }
-
 
 
     /**

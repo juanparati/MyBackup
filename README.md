@@ -21,6 +21,7 @@ A backup tool for MySQL/MariaDB that support the following features:
 - Custom actions (Copy/Move/Remove between physical and cloud filesystems).
 - Dynamic placeholders (Set snapshot names based on date, time, uuid, etc).
 - Process lock (It avoids to overlap the same backup process).
+- Set configuration values from environment variables.
 
 ## How it works?
 
