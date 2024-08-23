@@ -84,9 +84,20 @@ class Placeholder
             $string = $dateConvertFnc($string, $matches, fn ($date) => $date->toDateTimeString());
         }
 
-        // Replaced by datetime format (Ex: {{date_format:2024-02-01}}
+        // Replaced by timestamp format (Ex: {{timestamp:2024-02-01}}
         if (preg_match_all('/{{timestamp'.$regDatetime.'}}/mU', $string, $matches, PREG_SET_ORDER)) {
             $string = $dateConvertFnc($string, $matches, fn ($date) => $date->timestamp);
+        }
+
+        // Replaced by custom format (Ex: {{dateformat:{{date}}|d-m-Y}})
+        if (preg_match_all('/{{date_format'.$regDatetime.'\|(.*)}}/mU', $string, $matches, PREG_SET_ORDER)) {
+            $formattedDate = $dateConvertFnc($string, $matches, fn ($date) => $date->timestamp);
+
+            $string = now()
+                ->parse(ctype_digit($formattedDate) ? (int) $formattedDate : $formattedDate)
+                ->format($matches[0][4]);
+
+            unset($formattedDate);
         }
 
         // Replace by UUID 7 based on a specific time (Ex: {{uuid:2024-02-01}})

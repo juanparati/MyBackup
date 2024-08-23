@@ -359,7 +359,7 @@ File names can be automatically generated using placeholders. The following plac
 - {{datetime}} - It will generate the current date and time using the format YYYY-mm-dd HH:ii:ss.
 - {{timestamp}} - It will generate the current UNIX timestamp.
 - {{date_calc:}} - It will generate a relative date and time using the format YYYY-mm-dd HH:ii:ss. Example: {{date_calc:-2days}} or {{date_calc:+1month}}.
-- {{uuid}} - It will generate a UUID7.
+- {{uuid}} - It will generate a UUID7. 
 
 ### Special placeholders
 - {{snapshot_file}} - It's replaced with the final snapshot file name with all the final extensions. It cannot be used into the **snapshot_file** option.
@@ -367,8 +367,9 @@ File names can be automatically generated using placeholders. The following plac
 ### Format placeholders
 
 - {{date:}} - It will truncate a datetime format as date. Example: {{date:2024-01-01 01:00:00}} will generate 2024-01-01.
-- {{datetime:}} - It will truncate a date as datetime. Example: {{datetime:2024-01-01}} will generate 2024-01-01 00:00:00.
-- {{numeric:}} - It will remove all non-numeric characters. Examnple: {{numeric:2024-01-01}} will generate 20240101.
+- {{date_format:|}} - Customized date [format](https://www.php.net/manual/en/datetime.format.php). Example: {{date_format:2024-03-02|d-m-Y}} will generate 02-03-2024. 
+- {{datetime:}} - It will truncate a date as datetime. Example: {{datetime:2024-01-01}} will generate 2024-01-01 00:00:00 where "00:00:00" will become the current time (It's the shortcut of {{date_format:2024-01-01|Y-m-d h:i:s}}).
+- {{numeric:}} - It will remove all non-numeric characters. Example: {{numeric:2024-01-01}} will generate 20240101.
 - {{basename:}} - It will extract the basename of a path. Example: {{basename:/foo/var/file.sql}} is replaced by "file.sql".
 
 ### Placeholders chain
@@ -380,3 +381,4 @@ Examples:
 - {{basename:{{snapshot_file}}}} - It will extract the basename of the snapshot path.
 - {{date:{{date_calc:-1week}} - It will extract the date in format YYYY-mm-dd of the {{date_calc:-1week}} result.
 - {{numeric:{{datetime}}} - It remove all non-numeric characters of the {{datetime}} result.
+- {{date_format:{{date}}|Y}} - It will extract the year of the current date.

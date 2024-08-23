@@ -141,4 +141,22 @@ class PlaceholderTest extends TestCase
             Uuid::isValid($this->placeholder->replace('{{uuid:{{date_calc:-1week}}}}'))
         );
     }
+
+    public function testPlaceholderDateformat()
+    {
+        $this->assertEquals(
+            '2024-05-01',
+            $this->placeholder->replace("{{date_format:2024-05-30|Y-m-01}}")
+        );
+
+        $this->assertEquals(
+            '2024-10-01',
+            $this->placeholder->replace("{{date_format:2024-05-30 01:02:03|Y-10-01}}")
+        );
+
+        $this->assertEquals(
+            '0',
+            $this->placeholder->replace("{{date_format:{{date_calc:-1week}}|0}}")
+        );
+    }
 }
