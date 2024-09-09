@@ -233,7 +233,9 @@ class MySQLDump
 
     public function initialize(): static
     {
-        $this->snapshotFile->truncate();
+        if (!$this->snapshotFile->truncate()) {
+            throw new \RuntimeException('Unable to write file ' . $this->snapshotFile);
+        }
 
         return $this;
     }

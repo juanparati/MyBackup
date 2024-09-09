@@ -211,7 +211,7 @@ class BackupCommand extends CommandBase
 
         if (! $this->option('dry')) {
             $this->newLine()->info('Dumping snapshot, please be patience...');
-            $dump->initialize()->process($this->output);
+            $dump->process($this->output);
             $this->newLine()->line('Snapshot saved');
 
             // Compress snapshot if proceeds

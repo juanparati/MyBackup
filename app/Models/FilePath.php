@@ -233,9 +233,9 @@ class FilePath
     /**
      * Truncate file.
      */
-    public function truncate(): void
+    public function truncate(): bool
     {
-        @file_put_contents($this->path, '');
+        return !(@file_put_contents($this->path, '') === false);
     }
 
     /**
