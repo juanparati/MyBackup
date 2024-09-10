@@ -262,6 +262,16 @@ class BackupCommand extends CommandBase
             $lastCreatedCatalog = Catalog::create($snapshotInfo);
             $this->line('Registered snapshot CRC: '.$snapshotInfo['crc']);
 
+            $this->newLine()->info('Base backup file is available at: '  .$snapshotFile->absolutePath());
+
+            // Execute post actions
+            if ($this->config->post_actions) {
+                $this->runActions([
+                    'snapshot_file' => $snapshotInfo['snapshot'],
+                    'crc' => $snapshotInfo['crc'],
+                ]);
+            }
+
             // Rotate backups
             if ($this->config->backup_rotation !== null) {
                 $this->newLine()->info('Rotating backups...');
@@ -284,16 +294,6 @@ class BackupCommand extends CommandBase
                 }
 
                 $this->line('Rotated backup elements');
-            }
-
-            $this->newLine()->info('Base backup file is available at: '  .$snapshotFile->absolutePath());
-
-            // Execute post actions
-            if ($this->config->post_actions) {
-                $this->runActions([
-                    'snapshot_file' => $snapshotInfo['snapshot'],
-                    'crc' => $snapshotInfo['crc'],
-                ]);
             }
 
             // Send notification
