@@ -114,6 +114,8 @@ post_actions:
         filesystem: gcloud
         pattern: 'snapshot_*'
         period: '3 days'
+   - run:
+        command: 'echo "Finished"'                  # Run shell command
 ```
 
 ### Catalog file
@@ -306,8 +308,9 @@ Defined by "**post_actions**".
 It will perform additional operations after the full snapshot was dumped.
 
 The available post actions are:
-- copy (Copy a file)
+- copy (Copy a file).
 - delete_old (Delete an old file).
+- run (Run a shell command).
 
 ## Environment variables
 

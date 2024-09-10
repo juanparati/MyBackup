@@ -3,6 +3,7 @@
 namespace Tests\Unit;
 
 use App\Actions\CopyAction;
+use App\Actions\RunAction;
 use App\Models\Config;
 use App\Models\FilePath;
 use App\Models\Placeholder;
@@ -47,6 +48,22 @@ class ActionTest extends TestCase
 
         $this->assertTrue($success);
         $this->assertFileExists($local->absolutePath() . '/test.txt');
+    }
+
+    public function testRun() {
+        $dictionary = [
+            'snapshot_file' => static::$tmpDir . 'test.txt'
+        ];
+
+        $success = (new RunAction(
+            new Config([]),
+            new Placeholder($dictionary),
+            [
+                'command'  => 'echo "{{snapshot_file}}"',
+            ]
+        ))();
+
+        $this->assertTrue($success);
     }
 
 }
