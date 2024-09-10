@@ -188,7 +188,10 @@ class MySQLDump
      */
     public function addIgnoreTables(string $database, array $tables): static
     {
-        $this->ignoreTables[$database] = array_merge($this->ignoreTables, $tables);
+        $this->ignoreTables[$database] = array_merge(
+            $this->ignoreTables,
+            array_map(fn($r) => $database . '.' . $r, $tables)
+        );
 
         return $this;
     }
