@@ -198,7 +198,6 @@ class BackupCommand extends CommandBase
 
             foreach ($db['tables'] as $table) {
                 $dump->addTable($db['database'], $table['table'], $table['where']);
-                //$this->line("- The table {$db['database']}.{$table['table']} is going to be added");
                 $planList[] = [
                     'num' => count($planList) + 1,
                     'database' => $db['database'],

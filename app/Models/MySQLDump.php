@@ -341,7 +341,7 @@ class MySQLDump
      */
     protected function generateCommandForDatabases(): array
     {
-        if (! $this->tables) {
+        if (! $this->databases) {
             return [];
         }
 
