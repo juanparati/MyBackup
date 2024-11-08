@@ -15,10 +15,12 @@ jobs:
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
         with:
-          platforms: linux-arm64
+          platforms: linux/arm64
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
+        with:
+          platforms: linux/arm64
 
       # Install additional dependencies
       - run: sudo apt-get install automake autoconf bison flex cmake musl musl-tools
