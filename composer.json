@@ -31,7 +31,7 @@
         "league/flysystem-google-cloud-storage": "^3.0",
         "league/flysystem-sftp-v3": "^3.0",
         "spatie/laravel-google-cloud-storage": "^2.3",
-        "symfony/process": "^7.0",
+        "symfony/process": "^7.1",
         "symfony/yaml": "^7.0"
     },
     "require-dev": {
@@ -51,10 +51,7 @@
     "config": {
         "preferred-install": "dist",
         "sort-packages": true,
-        "optimize-autoloader": true,
-        "allow-plugins": {
-            "pestphp/pest-plugin": true
-        }
+        "optimize-autoloader": true
     },
     "minimum-stability": "stable",
     "prefer-stable": true,
