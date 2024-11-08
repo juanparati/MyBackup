@@ -21,7 +21,7 @@ jobs:
         uses: docker/setup-buildx-action@v3
 
       # Install additional dependencies
-      - run: sudo apt-get install automake autoconf bison flex cmake musl musl-tools libc6-dev
+      - run: sudo apt-get install automake autoconf bison flex cmake musl musl-tools
 
       # Download last SPC version
       - run: curl -fsSL -o spc https://dl.static-php.dev/static-php-cli/spc-bin/nightly/spc-linux-aarch64  && chmod +x spc
