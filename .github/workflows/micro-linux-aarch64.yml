@@ -16,7 +16,7 @@ jobs:
 
       - uses: sandervocke/setup-qemu-container@v1
         with:
-          container: ubuntu-latest
+          container: ubuntu
           arch: arm
 
       - name: Install additional dependencies
