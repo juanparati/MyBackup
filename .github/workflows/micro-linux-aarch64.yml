@@ -21,7 +21,7 @@ jobs:
 
       - name: Install additional dependencies
         shell: run-in-container.sh {0}
-        run: apt-get update && apt-get install automake autoconf bison flex cmake musl musl-tools
+        run: apt-get update && apt-get -y install automake autoconf bison flex cmake musl musl-tools
 
       # Download last SPC version
       - run: curl -fsSL -o spc https://dl.static-php.dev/static-php-cli/spc-bin/nightly/spc-linux-aarch64  && chmod +x spc
