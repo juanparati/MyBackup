@@ -61,10 +61,60 @@ jobs:
     - name: Ensure the PHAR works
       run: php builds/mybackup.phar --version
 
-    - name: Upload release artifact
+    - name: Upload release PHAR version
       uses: svenstaro/upload-release-action@v2
       with:
         repo_token: ${{ secrets.GITHUB_TOKEN }}
         file: builds/mybackup.phar
         asset_name: mybackup.phar
+        overwrite: true
+
+    - name: Downloading artifacts
+      uses: actions/download-artifact@v4
+      with:
+        path: builds
+        merge-multiple: true
+
+    - name: Build Linux executable (aarch64)
+      run: cat builds/mybackup > builds/micro-linux-aarch64.sfx && mv builds/micro-linux-aarch64.sfx builds/mybackup-linux-aarch64-${{ steps.previoustag.outputs.tag }}
+
+    - name: Upload Linux executable (aarch64)
+      uses: svenstaro/upload-release-action@v2
+      with:
+        repo_token: ${{ secrets.GITHUB_TOKEN }}
+        file: builds/mybackup-linux-aarch64-${{ steps.previoustag.outputs.tag }}
+        asset_name: mybackup-linux-aarch64-${{ steps.previoustag.outputs.tag }}
+        overwrite: true
+
+    - name: Build Linux executable (x86)
+      run: cat builds/mybackup > builds/micro-linux-x86.sfx && mv builds/micro-linux-x86.sfx builds/mybackup-linux-x86-${{ steps.previoustag.outputs.tag }}
+
+    - name: Upload Linux executable (x86)
+      uses: svenstaro/upload-release-action@v2
+      with:
+        repo_token: ${{ secrets.GITHUB_TOKEN }}
+        file: builds/mybackup-linux-x86-${{ steps.previoustag.outputs.tag }}
+        asset_name: mybackup-linux-amd64-${{ steps.previoustag.outputs.tag }}
+        overwrite: true
+
+    - name: Build MacOs executable (aarch64)
+      run: cat builds/mybackup > builds/micro-macos-aarch64.sfx && mv builds/micro-macos-aarch64.sfx builds/mybackup-macos-aarch64-${{ steps.previoustag.outputs.tag }}
+
+    - name: Upload MacOs executable (aarch64)
+      uses: svenstaro/upload-release-action@v2
+      with:
+        repo_token: ${{ secrets.GITHUB_TOKEN }}
+        file: builds/mybackup-macos-aarch64-${{ steps.previoustag.outputs.tag }}
+        asset_name: mybackup-macos-aarch64-${{ steps.previoustag.outputs.tag }}
+        overwrite: true
+
+    - name: Build MacOs executable (x86)
+      run: cat builds/mybackup > builds/micro-macos-x86.sfx && mv builds/micro-macos-x86.sfx builds/mybackup-macos-x86-${{ steps.previoustag.outputs.tag }}
+
+    - name: Upload MacOs executable (x86)
+      uses: svenstaro/upload-release-action@v2
+      with:
+        repo_token: ${{ secrets.GITHUB_TOKEN }}
+        file: builds/mybackup-macos-x86-${{ steps.previoustag.outputs.tag }}
+        asset_name: mybackup-macos-amd64-${{ steps.previoustag.outputs.tag }}
         overwrite: true
