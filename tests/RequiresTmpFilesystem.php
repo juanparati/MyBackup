@@ -20,7 +20,13 @@ trait RequiresTmpFilesystem
 
     public static function tearDownAfterClass(): void
     {
-        @File::deleteDirectory(static::$tmpDir);
+        try {
+            File::deleteDirectory(static::$tmpDir);
+        } catch (\Exception $e) {
+            echo '\nUnable to delete temporal test directory ' . static::$tmpDir;
+            echo '\nReason: ' . $e->getMessage();
+        }
+
         parent::tearDownAfterClass();
     }
 }
