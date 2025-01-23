@@ -1,4 +1,4 @@
-name: Build micro (Linux aarch64)
+name: Build micro (Linux x86)
 
 on: workflow_dispatch
 
@@ -8,40 +8,27 @@ env:
 jobs:
   build:
     name: Build micro.sfx
-    runs-on: ubuntu-latest
-
+    runs-on: ubuntu-24.04-arm
     steps:
-
       - uses: actions/checkout@v4
 
-      - uses: sandervocke/setup-qemu-container@v1
-        with:
-          container: debian
-          arch: arm
-
-      - name: Install additional dependencies
-        shell: run-in-container.sh {0}
-        run: apt-get update && apt-get -y install automake autoconf bison flex cmake musl musl-tools curl
+      # Install additional dependencies
+      - run: sudo apt-get install automake autoconf bison flex cmake musl musl-tools
 
       # Download last SPC version
-      - run: curl -fsSL -o spc https://dl.static-php.dev/static-php-cli/spc-bin/nightly/spc-linux-aarch64  && chmod +x spc
+      - run: curl -fsSL -o spc https://dl.static-php.dev/static-php-cli/spc-bin/nightly/spc-linux-aarch64 && chmod +x spc
 
-      - name: Check missing elements
-        shell: run-in-container.sh {0}
-        run: yes | ./spc doctor
+      # Install all required elements
+      - run: yes | ./spc doctor
 
-      - name: Download extensions
-        shell: run-in-container.sh {0}
-        run: ./spc download --with-php=8.2 --for-extensions "bcmath,ctype,dom,fileinfo,filter,ftp,libxml,mbregex,mbstring,mysqlnd,openssl,pcntl,pdo,pdo_mysql,pdo_sqlite,phar,posix,session,simplexml,sockets,sqlite3,ssh2,tokenizer,xml,yaml,zip,zlib,curl"
+      # Run build command
+      - run: ./spc download --with-php=8.2 --for-extensions "bcmath,ctype,dom,fileinfo,filter,ftp,libxml,mbregex,mbstring,mysqlnd,openssl,pcntl,pdo,pdo_mysql,pdo_sqlite,phar,posix,session,simplexml,sockets,sqlite3,ssh2,tokenizer,xml,yaml,zip,zlib,curl"
 
-      - name: Install UPX
-        shell: run-in-container.sh {0}
-        run: ./spc install-pkg upx
+      # Install upx
+      - run: ./spc install-pkg upx
 
       # Compile
-      - name: Compile
-        shell: run-in-container.sh {0}
-        run: ./spc build --build-micro "bcmath,ctype,dom,fileinfo,filter,ftp,libxml,mbregex,mbstring,mysqlnd,openssl,pcntl,pdo,pdo_mysql,pdo_sqlite,phar,posix,session,simplexml,sockets,sqlite3,ssh2,tokenizer,xml,yaml,zip,zlib,curl" --with-upx-pack
+      - run: ./spc build --build-micro "bcmath,ctype,dom,fileinfo,filter,ftp,libxml,mbregex,mbstring,mysqlnd,openssl,pcntl,pdo,pdo_mysql,pdo_sqlite,phar,posix,session,simplexml,sockets,sqlite3,ssh2,tokenizer,xml,yaml,zip,zlib,curl" --with-upx-pack
 
       # Upload micro.sfx executable
       - uses: actions/upload-artifact@v4
