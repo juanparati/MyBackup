@@ -20,7 +20,7 @@ trait RequiresTmpFilesystem
 
     public static function tearDownAfterClass(): void
     {
-        File::deleteDirectory(static::$tmpDir);
+        @File::deleteDirectory(static::$tmpDir);
         parent::tearDownAfterClass();
     }
 }
