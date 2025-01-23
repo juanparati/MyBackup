@@ -27,5 +27,5 @@ jobs:
       # Upload micro.sfx executable
       - uses: actions/upload-artifact@v4
         with:
-          name: micro.sfx
+          name: micro-macos-aarch64.sfx
           path: buildroot/bin/micro.sfx
