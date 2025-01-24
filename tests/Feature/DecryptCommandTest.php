@@ -1,10 +1,9 @@
 <?php
 
-namespace Feature;
+namespace Tests\Feature;
 
 use App\Helpers\FileEncrypt;
 use App\Models\FilePath;
-use Illuminate\Support\Facades\File;
 use Symfony\Component\Yaml\Yaml;
 use Tests\RequiresTmpFilesystem;
 use Tests\TestCase;
