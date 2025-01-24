@@ -2,6 +2,7 @@
 
 namespace Tests;
 
+use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\Facades\File;
 
 trait RequiresTmpFilesystem
@@ -23,7 +24,7 @@ trait RequiresTmpFilesystem
 
     public static function tearDownAfterClass(): void
     {
-        File::deleteDirectory(static::$tmpDir);
+        (new Filesystem)->deleteDirectory(static::$tmpDir);
         parent::tearDownAfterClass();
     }
 }

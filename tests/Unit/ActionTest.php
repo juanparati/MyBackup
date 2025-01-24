@@ -14,7 +14,8 @@ class ActionTest extends TestCase
 {
     use RequiresTmpFilesystem;
 
-    public function test_copy()
+
+    public function test_copy(): void
     {
 
         $local = FilePath::fromPath(static::$tmpDir)->mkdir('localTest', returnNew: true);
@@ -49,7 +50,7 @@ class ActionTest extends TestCase
         $this->assertFileExists($local->absolutePath().'/test.txt');
     }
 
-    public function test_run()
+    public function test_run() : void
     {
         $dictionary = [
             'snapshot_file' => static::$tmpDir.'test.txt',
@@ -65,4 +66,5 @@ class ActionTest extends TestCase
 
         $this->assertTrue($success);
     }
+
 }
