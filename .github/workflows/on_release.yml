@@ -74,28 +74,32 @@ jobs:
       with:
         path: builds
         merge-multiple: true
-        run-id: 'micro-linux-aarch64.yml'
+        run-id: 12930692838
+        github-token: ${{ github.token }}
 
     - name: Downloading micro.sfx from Build micro (Linux amd64)
       uses: actions/download-artifact@v4
       with:
         path: builds
         merge-multiple: true
-        run-id: 'micro-linux-x86_64.yml'
+        run-id: 12930694381
+        github-token: ${{ github.token }}
 
     - name: Downloading micro.sfx from Build micro (MacOs aarch64)
       uses: actions/download-artifact@v4
       with:
         path: builds
         merge-multiple: true
-        run-id: 'micro-macos-aarch64.yml'
+        run-id: 12930696130
+        github-token: ${{ github.token }}
 
     - name: Downloading micro.sfx from Build micro (MacOs x86)
       uses: actions/download-artifact@v4
       with:
         path: builds
         merge-multiple: true
-        run-id: 'micro-macos-x86_64.yml'
+        run-id: 12930697451
+        github-token: ${{ github.token }}
 
     - name: Build Linux executable (aarch64)
       run: cat builds/mybackup > builds/micro-linux-aarch64.sfx && mv builds/micro-linux-aarch64.sfx builds/mybackup-linux-aarch64-${{ steps.previoustag.outputs.tag }}
