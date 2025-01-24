@@ -101,6 +101,9 @@ jobs:
         run-id: 12930697451
         github-token: ${{ github.token }}
 
+    - name: Listing build directory
+      run: ls -R builds
+
     - name: Build Linux executable (aarch64)
       run: cat builds/mybackup > builds/micro-linux-aarch64.sfx && mv builds/micro-linux-aarch64.sfx builds/mybackup-linux-aarch64-${{ steps.previoustag.outputs.tag }}
 
