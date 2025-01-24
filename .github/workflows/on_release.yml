@@ -69,11 +69,33 @@ jobs:
         asset_name: mybackup.phar
         overwrite: true
 
-    - name: Downloading artifacts
+    - name: Downloading micro.sfx from Build micro (Linux aarch64)
       uses: actions/download-artifact@v4
       with:
         path: builds
         merge-multiple: true
+        run-id: 'micro-linux-aarch64.yml'
+
+    - name: Downloading micro.sfx from Build micro (Linux amd64)
+      uses: actions/download-artifact@v4
+      with:
+        path: builds
+        merge-multiple: true
+        run-id: 'micro-linux-x86_64.yml'
+
+    - name: Downloading micro.sfx from Build micro (MacOs aarch64)
+      uses: actions/download-artifact@v4
+      with:
+        path: builds
+        merge-multiple: true
+        run-id: 'micro-macos-aarch64.yml'
+
+    - name: Downloading micro.sfx from Build micro (MacOs x86)
+      uses: actions/download-artifact@v4
+      with:
+        path: builds
+        merge-multiple: true
+        run-id: 'micro-macos-x86_64.yml'
 
     - name: Build Linux executable (aarch64)
       run: cat builds/mybackup > builds/micro-linux-aarch64.sfx && mv builds/micro-linux-aarch64.sfx builds/mybackup-linux-aarch64-${{ steps.previoustag.outputs.tag }}
