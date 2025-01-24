@@ -11,6 +11,7 @@ class RunAction extends ActionBase implements ActionContract
     {
         $command = $this->placeholder->replace($this->instructions['command']);
         exec($command, result_code: $status);
+
         return $status == Command::SUCCESS;
     }
 }

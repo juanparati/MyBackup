@@ -10,7 +10,7 @@ class InitCommandTest extends TestCase
 {
     use RequiresTmpFilesystem;
 
-    public function testInitCommand(): void
+    public function test_init_command(): void
     {
         $this->artisan(
             'init',

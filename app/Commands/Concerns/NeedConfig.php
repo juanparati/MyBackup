@@ -7,7 +7,6 @@ use App\Models\Exceptions\ConfigFileException;
 
 trait NeedConfig
 {
-
     /**
      * Configuration.
      */
@@ -33,5 +32,4 @@ trait NeedConfig
 
         return null;
     }
-
 }

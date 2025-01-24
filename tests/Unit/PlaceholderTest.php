@@ -20,7 +20,7 @@ class PlaceholderTest extends TestCase
         $this->placeholder = new Placeholder($this->dictionary);
     }
 
-    public function testReplaceFromDictionary(): void
+    public function test_replace_from_dictionary(): void
     {
         $repString = '/one/two space/%s_file';
 
@@ -35,7 +35,7 @@ class PlaceholderTest extends TestCase
         );
     }
 
-    public function testReplaceByDate(): void
+    public function test_replace_by_date(): void
     {
         $this->assertEquals(
             now()->toDateString(),
@@ -48,7 +48,7 @@ class PlaceholderTest extends TestCase
         );
     }
 
-    public function testReplaceByDateTime(): void
+    public function test_replace_by_date_time(): void
     {
         $this->assertEquals(
             now()->toDateTimeString(),
@@ -61,7 +61,7 @@ class PlaceholderTest extends TestCase
         );
     }
 
-    public function testReplaceByTimestamp(): void
+    public function test_replace_by_timestamp(): void
     {
         $this->assertEquals(
             (string) now()->timestamp,
@@ -74,7 +74,7 @@ class PlaceholderTest extends TestCase
         );
     }
 
-    public function testByNumeric(): void
+    public function test_by_numeric(): void
     {
         $this->assertEquals(
             preg_replace("~\D~", '', now()->toDateTimeString()),
@@ -87,7 +87,7 @@ class PlaceholderTest extends TestCase
         );
     }
 
-    public function testReplaceByRelativeTime(): void
+    public function test_replace_by_relative_time(): void
     {
         foreach (DeclarativeHumanDateTest::TIME_REFERENCES as $timeReference) {
             foreach ([$timeReference, str($timeReference)->plural()] as $k => $reference) {
@@ -103,7 +103,7 @@ class PlaceholderTest extends TestCase
         }
     }
 
-    public function testPlaceholderCombination(): void
+    public function test_placeholder_combination(): void
     {
         $repString = 'The %s was generated at %s';
 
@@ -115,7 +115,7 @@ class PlaceholderTest extends TestCase
         );
     }
 
-    public function testPlaceholderCombinationWithSamePattern()
+    public function test_placeholder_combination_with_same_pattern()
     {
         $basename = basename($this->dictionary['snapshot_file']);
         $repString = '%s and %s';
@@ -128,7 +128,7 @@ class PlaceholderTest extends TestCase
         );
     }
 
-    public function testPlaceholderUuidCombination()
+    public function test_placeholder_uuid_combination()
     {
         $datetime = '2024-01-01 00:00:00';
 
@@ -142,21 +142,21 @@ class PlaceholderTest extends TestCase
         );
     }
 
-    public function testPlaceholderDateformat()
+    public function test_placeholder_dateformat()
     {
         $this->assertEquals(
             '2024-05-01',
-            $this->placeholder->replace("{{date_format:2024-05-30|Y-m-01}}")
+            $this->placeholder->replace('{{date_format:2024-05-30|Y-m-01}}')
         );
 
         $this->assertEquals(
             '2024-10-01',
-            $this->placeholder->replace("{{date_format:2024-05-30 01:02:03|Y-10-01}}")
+            $this->placeholder->replace('{{date_format:2024-05-30 01:02:03|Y-10-01}}')
         );
 
         $this->assertEquals(
             '0',
-            $this->placeholder->replace("{{date_format:{{date_calc:-1week}}|0}}")
+            $this->placeholder->replace('{{date_format:{{date_calc:-1week}}|0}}')
         );
     }
 }

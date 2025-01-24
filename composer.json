@@ -24,7 +24,7 @@
         "ext-pdo": "*",
         "ext-zlib": "*",
         "illuminate/database": "^11.5",
-        "laravel-zero/framework": "^11.0.0",
+        "laravel-zero/framework": "^11.36.0",
         "laravel/slack-notification-channel": "^3.2",
         "league/flysystem-aws-s3-v3": "^3.0",
         "league/flysystem-ftp": "^3.0",
@@ -41,7 +41,10 @@
     "autoload": {
         "psr-4": {
             "App\\": "app/"
-        }
+        },
+        "exclude-from-classmap": [
+            "vendor/laravel/framework/src/Illuminate/Foundation"
+        ]
     },
     "autoload-dev": {
         "psr-4": {
@@ -59,10 +62,6 @@
         "application"
     ],
     "scripts": {
-        "post-autoload-dump": [
-            "@clear",
-            "@prepare"
-        ],
         "lint": [
             "@php vendor/bin/pint",
             "@php vendor/bin/phpstan analyse"

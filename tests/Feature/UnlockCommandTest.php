@@ -9,7 +9,7 @@ class UnlockCommandTest extends TestCase
 {
     use RequiresTmpFilesystem;
 
-    public function testUnlockCommandOnMissing(): void
+    public function test_unlock_command_on_missing(): void
     {
         $this->artisan(
             'init',

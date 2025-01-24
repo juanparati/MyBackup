@@ -10,7 +10,6 @@ use Symfony\Component\Yaml\Yaml;
 
 class InitCommand extends CommandBase
 {
-
     /**
      * The signature of the command.
      *

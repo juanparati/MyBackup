@@ -9,7 +9,7 @@ use LaravelZero\Framework\Commands\Command;
 
 class UnlockCommand extends CommandBase
 {
-    use NeedConfig, NeedCatalog;
+    use NeedCatalog, NeedConfig;
 
     /**
      * The signature of the command.

@@ -18,9 +18,7 @@ class Config implements \ArrayAccess
     /**
      * Constructor.
      */
-    public function __construct(protected array $config)
-    {
-    }
+    public function __construct(protected array $config) {}
 
     /**
      * Factory method.

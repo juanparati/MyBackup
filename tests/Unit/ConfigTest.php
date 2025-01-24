@@ -7,7 +7,7 @@ use Tests\TestCase;
 
 class ConfigTest extends TestCase
 {
-    public function testParseEnv()
+    public function test_parse_env()
     {
         $reflection = new \ReflectionClass(Config::class);
         $method = $reflection->getMethod('parseEnv');

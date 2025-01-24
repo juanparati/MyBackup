@@ -25,7 +25,7 @@ class DeclarativeHumanDateTest extends TestCase
         $this->currentDate = now()->toImmutable();
     }
 
-    public function testRelativeTime()
+    public function test_relative_time()
     {
         foreach (static::TIME_REFERENCES as $timeReference) {
             foreach ([$timeReference, str($timeReference)->plural()] as $k => $reference) {

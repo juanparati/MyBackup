@@ -7,9 +7,7 @@ use Illuminate\Notifications\Notification;
 
 abstract class DynamicNotificationBase extends Notification
 {
-    public function __construct(protected array $settings, protected array $data = [])
-    {
-    }
+    public function __construct(protected array $settings, protected array $data = []) {}
 
     public function via($notifiable): array
     {
@@ -23,7 +21,7 @@ abstract class DynamicNotificationBase extends Notification
 
     public function toSlack($notifiable): SlackMessage
     {
-        $slackMsg = new SlackMessage();
+        $slackMsg = new SlackMessage;
 
         if ($this->settings['slack']['username'] ?? null) {
             $slackMsg->username = $this->settings['slack']['username'];

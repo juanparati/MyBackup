@@ -6,6 +6,9 @@ use Illuminate\Support\Facades\File;
 
 trait RequiresTmpFilesystem
 {
+
+    use CreatesApplication;
+
     protected static string $tmpDir = '/tmp/mybackup_test/';
 
     public static function setUpBeforeClass(): void
@@ -20,13 +23,7 @@ trait RequiresTmpFilesystem
 
     public static function tearDownAfterClass(): void
     {
-        try {
-            File::deleteDirectory(static::$tmpDir);
-        } catch (\Exception $e) {
-            echo '\nUnable to delete temporal test directory ' . static::$tmpDir;
-            echo '\nReason: ' . $e->getMessage();
-        }
-
+        File::deleteDirectory(static::$tmpDir);
         parent::tearDownAfterClass();
     }
 }

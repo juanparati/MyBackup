@@ -190,7 +190,7 @@ class MySQLDump
     {
         $this->ignoreTables[$database] = array_merge(
             $this->ignoreTables,
-            array_map(fn($r) => $database . '.' . $r, $tables)
+            array_map(fn ($r) => $database.'.'.$r, $tables)
         );
 
         return $this;
@@ -236,8 +236,8 @@ class MySQLDump
 
     public function initialize(): static
     {
-        if (!$this->snapshotFile->truncate()) {
-            throw new \RuntimeException('Unable to write file ' . $this->snapshotFile);
+        if (! $this->snapshotFile->truncate()) {
+            throw new \RuntimeException('Unable to write file '.$this->snapshotFile);
         }
 
         return $this;
@@ -281,12 +281,14 @@ class MySQLDump
                 // dump($command);
                 exec($command, $output, $status);
 
-                if ($console?->isVerbose())
+                if ($console?->isVerbose()) {
                     $console?->comment($command);
+                }
 
                 if ($status !== Command::SUCCESS) {
-                    if ($console?->isVerbose())
+                    if ($console?->isVerbose()) {
                         $console?->error($output);
+                    }
 
                     throw new \RuntimeException("Unable to dump snapshot: $command");
                 }
@@ -324,7 +326,7 @@ class MySQLDump
             }
 
             if ($tableRecord['where']) {
-                $currentCommand .= ' --where='.escapeshellarg((new Placeholder())->replace($tableRecord['where']));
+                $currentCommand .= ' --where='.escapeshellarg((new Placeholder)->replace($tableRecord['where']));
             }
 
             $currentCommand .= ' '.$tableRecord['database'].' '.$tableRecord['table'];

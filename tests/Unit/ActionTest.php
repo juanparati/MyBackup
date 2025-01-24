@@ -14,14 +14,13 @@ class ActionTest extends TestCase
 {
     use RequiresTmpFilesystem;
 
-
-    public function testCopy()
+    public function test_copy()
     {
 
         $local = FilePath::fromPath(static::$tmpDir)->mkdir('localTest', returnNew: true);
 
         $dictionary = [
-            'snapshot_file' => static::$tmpDir . 'test.txt'
+            'snapshot_file' => static::$tmpDir.'test.txt',
         ];
 
         file_put_contents($dictionary['snapshot_file'], 'test');
@@ -29,7 +28,7 @@ class ActionTest extends TestCase
         $filesystems = [
             'localTest' => [
                 'driver' => 'local',
-                'root'   => $local->absolutePath(),
+                'root' => $local->absolutePath(),
             ],
         ];
 
@@ -40,30 +39,30 @@ class ActionTest extends TestCase
             $config,
             new Placeholder($dictionary),
             [
-                'filesystem'  => 'localTest',
-                'source'      => '{{snapshot_file}}',
-                'destination' => '{{basename:{{snapshot_file}}}}'
+                'filesystem' => 'localTest',
+                'source' => '{{snapshot_file}}',
+                'destination' => '{{basename:{{snapshot_file}}}}',
             ]
         ))();
 
         $this->assertTrue($success);
-        $this->assertFileExists($local->absolutePath() . '/test.txt');
+        $this->assertFileExists($local->absolutePath().'/test.txt');
     }
 
-    public function testRun() {
+    public function test_run()
+    {
         $dictionary = [
-            'snapshot_file' => static::$tmpDir . 'test.txt'
+            'snapshot_file' => static::$tmpDir.'test.txt',
         ];
 
         $success = (new RunAction(
             new Config([]),
             new Placeholder($dictionary),
             [
-                'command'  => 'echo "{{snapshot_file}}"',
+                'command' => 'echo "{{snapshot_file}}"',
             ]
         ))();
 
         $this->assertTrue($success);
     }
-
 }

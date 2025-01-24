@@ -26,7 +26,7 @@ use function Laravel\Prompts\password;
 
 class BackupCommand extends CommandBase
 {
-    use NeedConfig, NeedCatalog, NeedFilesystem, NeedTargetConnection, NeedNotifications, NeedActions;
+    use NeedActions, NeedCatalog, NeedConfig, NeedFilesystem, NeedNotifications, NeedTargetConnection;
 
     /**
      * The signature of the command.
@@ -150,7 +150,7 @@ class BackupCommand extends CommandBase
         }
 
         $this->newLine()->info('Creating backup plan...');
-        $snapshotFile = FilePath::fromPath((new Placeholder())->replace($this->config->snapshot_file));
+        $snapshotFile = FilePath::fromPath((new Placeholder)->replace($this->config->snapshot_file));
         $this->line('Snapshot file: '.$snapshotFile->path());
 
         if ($snapshotFile->exists(FilePathScope::EXTERNAL)) {
@@ -262,7 +262,7 @@ class BackupCommand extends CommandBase
             $lastCreatedCatalog = Catalog::create($snapshotInfo);
             $this->line('Registered snapshot CRC: '.$snapshotInfo['crc']);
 
-            $this->newLine()->info('Base backup file is available at: '  .$snapshotFile->absolutePath());
+            $this->newLine()->info('Base backup file is available at: '.$snapshotFile->absolutePath());
 
             // Execute post actions
             if ($this->config->post_actions) {
@@ -305,7 +305,6 @@ class BackupCommand extends CommandBase
         return Command::SUCCESS;
 
     }
-
 
     /**
      * Retrieve the list of databases and tables to back up.

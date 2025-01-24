@@ -7,7 +7,7 @@ use Tests\TestCase;
 
 class FilePathTest extends TestCase
 {
-    public function testReplaceByHome()
+    public function test_replace_by_home()
     {
         $home = getenv('HOME');
 
@@ -22,7 +22,7 @@ class FilePathTest extends TestCase
         );
     }
 
-    public function testAddExtension()
+    public function test_add_extension()
     {
         $this->assertEquals(
             'file.txt.gz',

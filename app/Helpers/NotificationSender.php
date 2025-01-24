@@ -19,7 +19,7 @@ class NotificationSender
             return false;
         }
 
-        $notifiable = new AnonymousNotifiable();
+        $notifiable = new AnonymousNotifiable;
 
         if ($this->settings['slack'] ?? null) {
             $notifiable->route('slack', $this->settings['slack']['webhook']);

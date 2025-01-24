@@ -30,7 +30,7 @@ class DBStatus
      */
     public static function make(): static
     {
-        static::$_instance = static::$_instance ?: new self();
+        static::$_instance = static::$_instance ?: new self;
 
         return static::$_instance;
     }
@@ -61,6 +61,6 @@ class DBStatus
 
         $qry->execute();
 
-        return 'ON' ===  $qry->fetch(PDO::FETCH_ASSOC)['VARIABLE_VALUE'];
+        return $qry->fetch(PDO::FETCH_ASSOC)['VARIABLE_VALUE'] === 'ON';
     }
 }

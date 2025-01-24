@@ -42,12 +42,14 @@ class CheckReplicationCommand extends CommandBase
 
         $this->newLine()->info('Checking replication status...');
 
-        if (!DBStatus::make()->hasActiveReplication()) {
+        if (! DBStatus::make()->hasActiveReplication()) {
             $this->output->error('💥 Replication is NOT working!');
+
             return Command::FAILURE;
         }
 
         $this->output->success('👍 Replication on progress!');
+
         return Command::SUCCESS;
 
     }

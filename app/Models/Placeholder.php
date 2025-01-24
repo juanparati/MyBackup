@@ -9,9 +9,7 @@ class Placeholder
     /**
      * Constructor.
      */
-    public function __construct(protected array $dictionary = [])
-    {
-    }
+    public function __construct(protected array $dictionary = []) {}
 
     /**
      * Add/Replace value from dictionary.

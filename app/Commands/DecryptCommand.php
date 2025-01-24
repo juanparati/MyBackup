@@ -10,7 +10,7 @@ use Symfony\Component\Console\Command\Command;
 
 class DecryptCommand extends CommandBase
 {
-   use NeedConfig;
+    use NeedConfig;
 
     /**
      * The signature of the command.

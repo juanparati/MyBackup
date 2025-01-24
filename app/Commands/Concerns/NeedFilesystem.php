@@ -4,7 +4,6 @@ namespace App\Commands\Concerns;
 
 trait NeedFilesystem
 {
-
     use NeedConfig;
 
     /**

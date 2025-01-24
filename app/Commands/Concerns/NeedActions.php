@@ -28,7 +28,7 @@ trait NeedActions
 
             $this->task(
                 "- Running action [$k] $actionName",
-                fn() => (new $actionClass($this->config, $placeholder, $instructions))()
+                fn () => (new $actionClass($this->config, $placeholder, $instructions))()
             );
         }
     }
