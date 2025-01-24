@@ -73,7 +73,6 @@ jobs:
       uses: actions/download-artifact@v4
       with:
         path: builds
-        merge-multiple: true
         run-id: 12930692838
         github-token: ${{ github.token }}
 
@@ -81,7 +80,6 @@ jobs:
       uses: actions/download-artifact@v4
       with:
         path: builds
-        merge-multiple: true
         run-id: 12930694381
         github-token: ${{ github.token }}
 
@@ -89,7 +87,6 @@ jobs:
       uses: actions/download-artifact@v4
       with:
         path: builds
-        merge-multiple: true
         run-id: 12930696130
         github-token: ${{ github.token }}
 
@@ -97,7 +94,6 @@ jobs:
       uses: actions/download-artifact@v4
       with:
         path: builds
-        merge-multiple: true
         run-id: 12930697451
         github-token: ${{ github.token }}
 
