@@ -21,7 +21,10 @@ trait NeedConfig
 
         // Read configuration file.
         try {
-            $this->config = Config::readFromFile($this->argument('config_file'));
+            $configFile = $this->hasOption('config_file') ?
+                $this->option('config_file') : $this->argument('config_file');
+
+            $this->config = Config::readFromFile($configFile);
         } catch (ConfigFileException $e) {
             $this->error($e->getMessage());
 
