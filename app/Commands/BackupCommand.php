@@ -33,7 +33,7 @@ class BackupCommand extends CommandBase
      *
      * @var string
      */
-    protected $signature = 'backup {config_file : configuration file}
+    protected $signature = 'backup {config_file : Configuration file}
         {--dry : Do not perform backup}
     ';
 
