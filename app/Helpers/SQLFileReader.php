@@ -70,8 +70,6 @@ class SQLFileReader
                 $buffer = '';
             }
         }
-
-        $this->totalRead = $this->fileSize;
     }
 
     /**

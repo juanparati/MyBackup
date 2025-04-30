@@ -22,6 +22,7 @@ A backup tool for MySQL/MariaDB that support the following features:
 - Dynamic placeholders (Set snapshot names based on date, time, uuid, etc).
 - Process lock (It avoids to overlap the same backup process).
 - Set configuration values from environment variables.
+- Backup restoration.
 
 ## How it works?
 
