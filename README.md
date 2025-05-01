@@ -13,27 +13,27 @@
 A backup tool for MySQL/MariaDB that support the following features:
 
 - Backup plan configuration (Copy entire databases or specific tables with custom options).
-- GZ compression.
+- On-fly GZ compression.
 - Snapshot encryption.
 - Snapshot rotation.
 - Notifications (Slack and e-mail).
-- Read-replica verification (Verify that you read replica is synchronised before performing a backup).
+- Read-replica verification (Verify that your read replica is synchronized before performing a backup).
 - Custom actions (Copy/Move/Remove between physical and cloud filesystems).
-- Dynamic placeholders (Set snapshot names based on date, time, uuid, etc).
-- Process lock (It avoids to overlap the same backup process).
+- Dynamic placeholders (Set snapshot names based on date, time, uuid, etc.).
+- Process lock (It avoids overlapping the same backup process).
 - Set configuration values from environment variables.
 - Backup restoration.
 
-## How it works?
+## How does it work?
 
 ### Perform backups
 
-1. Create backup plan configuration:
+1. Create a backup plan configuration:
 
         mybackup init backup_plan.yaml
 
 2. Edit the backup plan configuration file.
-3. Verify backup and simulate backup process:
+3. Verify backup and simulate a backup process:
 
         mybackup backup backup_plan.yaml --dry
 
@@ -47,7 +47,7 @@ An example of a complete backup plan may look like the following one:
 
 ```YAML
 name: "Backup plan"
-catalog_file: "/tmp/catalog.sqlite"                   # Path to the snapshots catalog.
+catalog_file: "/tmp/catalog.sqlite"                   # Path to the snapshot catalog.
 snapshot_file: "/tmp/snapshot_{{numeric:{{datetime}}}}.sql" # Path to the snapshot.
 connection:
    driver: "mysql"                                    # Supported drivers are "mysql" and "mariadb".                                                                                       
@@ -55,16 +55,17 @@ connection:
    port: 3306
    username: "root"
    password: "secret"                                 # When this line is missing it will prompt the password.
-mysqldump_path: "mysqldump"                           # Path to mysqldump/mariadb-dump.                             
+mysqldump_path: "mysqldump"                           # Path to mysqldump/mariadb-dump.            
+gzip_path: "gzip"                                     # Path to gzip (Only used when compress != false)
 backup_rotation: "2 days"                             # It will delete the backups older than 2 days.
-compress: true                                        # It will compress the snapshot file.                
-is_replica: true                                      # It will check if read-replica is synchronised.                             
+compress: true                                        # It will compress the snapshot file (Use 1-9 for compression level).                
+is_replica: true                                      # It will check if the read-replica is synchronized.                             
 databases:
    - firstdb                                          # It will dump the entire "firstdb" database.
-   - secondb:                                         # It will dump "seconddb" database with custom options and ignoring some tables.
+   - secondb:                                         # It will dump the "seconddb" database with custom options and ignoring some tables.
         options: [ "--single-transaction", "--quick", "--compress" ]
         ignore: [ "table1", "table2" ]
-   - thirddb: # It will dump some tables of "thirddb" database.
+   - thirddb: # It will dump some tables of the "thirddb" database.
         options: [ "--single-transaction", "--quick" ]
         to: firstdb                                   # It will copy the tables into the "firstdb".
         tables:
@@ -103,11 +104,11 @@ filesystems:                                          # It will define different
       region: 'eu-central-1'
       bucket: 'mybackup-bucket'
 post_actions:
-   - copy:                                          # Copy snapshot file to gcloud filesystem.
+   - copy:                                          # Copy a snapshot file to gcloud filesystem.
         filesystem: gcloud
         source: '{{snapshot_file}}'
         destination: '{{basename:{{snapshot_file}}}}'
-   - copy:                                          # Copy snapshot file to s3 filesystem.
+   - copy:                                          # Copy a snapshot file to s3 filesystem.
         filesystem: s3
         source: '{{snapshot_file}}'
         destination: '{{uuid}}.sql.gz.aes'
@@ -121,7 +122,7 @@ post_actions:
 
 ### Catalog file
 
-Defined by option "**catalog_file**".
+Defined by the option "**catalog_file**".
 
 It's a sqlite file that contains the historical list of the previous completed backups and the lock information.
 The lock information will avoid overlap two or more backup processes.
@@ -132,7 +133,7 @@ The catalog file is created automatically when it's missing.
 
 ### Snapshot file
 
-Defined by option "**snapshot_file**".
+Defined by the option "**snapshot_file**".
 
 It's the destination of the backup snapshot. In case that file is compressed and/or encrypted the file may have additional extensions.
 
@@ -157,9 +158,9 @@ connection:
 ```
 ### MySQLDump path
 
-Defined by option "**mysqldump_path**".
+Defined by the option "**mysqldump_path**".
 
-MyBackup uses internally "mysqldump" or "mariadb-dump". If the full path to the dump tool is not supplied then MyBackup will attempt to find the path automatically.
+MyBackup uses internal "mysqldump" or "mariadb-dump". If the full path to the dump tool is not supplied, then MyBackup will attempt to find the path automatically.
 
 Example:
 
@@ -173,32 +174,32 @@ Defined by option "**backup_rotation**".
 
 It will remove the old snapshots from the local filesystem. 
 
-MyBackup can rotate the old snapshots based on a relative time indicating a time reference like for example: "1 day", "2 days", "3 weeks", "1 month", etc.
+MyBackup can rotate the old snapshots based on a relative time indicating a time reference like for example, "1 day", "2 days", "3 weeks", "1 month", etc.
 
-MyBackup can also rotate the old snapshots based on the backup sequence using just a number. So for example 2 will indicate that MyBackup will keep the last 2 previous backups.
+MyBackup can also rotate the old snapshots based on the backup sequence using just a number. So for example, 2 will indicate that MyBackup will keep the last two previous backups.
 
-When this option is missing the rotation is disabled.
+When this option is missing, the rotation is disabled.
 
 
 ### Snapshot compression
 
 Defined by option "**compress**".
 
-It will compress the snapshot file as a GZ file. The ".gz" extension will be added to snapshot file.
+It will compress the snapshot file as a GZ file. The ".gz" extension will be added to a snapshot file.
 
 
 ### Check replication
 
 Defined by option "**is_replica**".
 
-If the backup is taken from a read replica it's recommended to check if the replica is running before to perform the backup, so it will avoid to dump snapshots from a server that is not synchronised with the master.
+If the backup is taken from a read-replica, it's recommended to check if the replica is running before performing the backup, so it will avoid dumping snapshots from a server that is not synchronized with the master.
 
 When this option is equal to `true` and the read-replica is not running or not reading the binlogs from the master server it will stop the backup process.
 
 
 ### Define objets to dump
 
-Defined by option "**databases**".
+Defined by the option "**databases**".
 
 Define which databases or selected tables are dumped into the snapshot.
 
@@ -214,11 +215,11 @@ It will encrypt the snapshot file. The ".aes" extension will be added to the sna
 
 ### Notifications
 
-Defined by option "**notifications**".
+Defined by the option "**notifications**".
 
 It defines the notifications methods so backups are reported when the process is finished.
 
-Only "slack" and "mail" methods are available and both methods can be used at same time.
+Only "slack" and "mail" methods are available, and both methods can be used at the same time.
 
 Example:
 
@@ -323,7 +324,7 @@ Example:
 
       password: '%env(DB_PASSWORD:secret)%'
 
-In the previous example the "password" is taken from the environment variable "DB_PASSWORD" and in case the variable is undefined the default value "secret" is used.
+In the previous example the "password" is taken from the environment variable "DB_PASSWORD" and in case the variable is undefined, the default value "secret" is used.
 
 The default value is optional.
 
@@ -340,7 +341,7 @@ In the previous example the "COMPRESS" environment variable is taken and cast as
 The following casts are available:
 
 - string (Default)
-- bool (When variable is equal to "true" or 1 then is cast as true)
+- bool (When a variable is equal to "true" or 1 then is cast as true)
 - int
 - float
 - json (Convert a JSON string into an array)
@@ -384,5 +385,5 @@ Examples:
 
 - {{basename:{{snapshot_file}}}} - It will extract the basename of the snapshot path.
 - {{date:{{date_calc:-1week}} - It will extract the date in format YYYY-mm-dd of the {{date_calc:-1week}} result.
-- {{numeric:{{datetime}}} - It remove all non-numeric characters of the {{datetime}} result.
+- {{numeric:{{datetime}}} - It removes all non-numeric characters of the {{datetime}} result.
 - {{date_format:{{date}}|Y}} - It will extract the year of the current date.
