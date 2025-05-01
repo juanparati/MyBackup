@@ -135,13 +135,13 @@ The catalog file is created automatically when it's missing.
 
 Defined by the option "**snapshot_file**".
 
-It's the destination of the backup snapshot. In case that file is compressed and/or encrypted the file may have additional extensions.
+It's the destination of the backup snapshot. In case that file is compressed and/or encrypted, the file may have additional extensions.
 
 ### Connection
 
 Defined by option "**connection**".
 
-Indicate the connection options. The only supported drivers are "mysql" and "mariadb", however MariaDB also works with "mysql" driver.
+Indicate the connection options. The only supported drivers are "mysql" and "mariadb", however, MariaDB also works with "mysql" driver.
 
 The possible options are:
 
@@ -186,6 +186,12 @@ When this option is missing, the rotation is disabled.
 Defined by option "**compress**".
 
 It will compress the snapshot file as a GZ file. The ".gz" extension will be added to a snapshot file.
+
+The snapshot file is streamed directly without the requirement of an intermediate dump file, so it reduces the disk space during the dump stage.
+
+This option can accept alternative an integer from 1 to 9 that indicates the gzip compression level.
+
+By default, compress is equal to "false" so the snapshot file is not compressed.
 
 
 ### Check replication
