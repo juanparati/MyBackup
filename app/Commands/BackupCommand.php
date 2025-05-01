@@ -7,11 +7,11 @@ use App\Commands\Concerns\NeedCatalog;
 use App\Commands\Concerns\NeedConfig;
 use App\Commands\Concerns\NeedFilesystem;
 use App\Commands\Concerns\NeedNotifications;
+use App\Commands\Concerns\NeedSearchPath;
 use App\Commands\Concerns\NeedTargetConnection;
 use App\Helpers\DBStatus;
 use App\Helpers\DeclarativeHumanDate;
 use App\Helpers\FileEncrypt;
-use App\Helpers\GzipCompressor;
 use App\Models\Catalog;
 use App\Models\Enums\FilePathScope;
 use App\Models\FilePath;
@@ -19,14 +19,19 @@ use App\Models\Lock;
 use App\Models\MySQLDump;
 use App\Models\Placeholder;
 use App\Notifications\BackupFinishedNotification;
-use Illuminate\Support\Facades\Process;
 use Symfony\Component\Console\Command\Command;
 
 use function Laravel\Prompts\password;
 
 class BackupCommand extends CommandBase
 {
-    use NeedActions, NeedCatalog, NeedConfig, NeedFilesystem, NeedNotifications, NeedTargetConnection;
+    use NeedActions,
+        NeedCatalog,
+        NeedConfig,
+        NeedFilesystem,
+        NeedNotifications,
+        NeedTargetConnection,
+        NeedSearchPath;
 
     /**
      * The signature of the command.
@@ -99,28 +104,24 @@ class BackupCommand extends CommandBase
 
     protected function executeTasks(): int
     {
-
         // Check mysqldump path
-        $this->newLine()->info('Checking mysqldump/mariadb-dump executable...');
+        $mysqlDumpPath = $this->searchPath(
+            $this->config->mysqldump_path ?? 'mysqldump',
+            'mysqldump/mariadb-dump'
+        );
 
-        $mysqlDumpPath = FilePath::fromPath($this->config->mysqldump_path ?? 'mysqldump');
+        if (!$mysqlDumpPath) {
+            return Command::FAILURE;
+        }
 
-        if ($mysqlDumpPath->exists()) {
-            $this->line('Executable found!');
-        } else {
-            $this->line('Unable to locate MySQL dump... trying to locate automatically');
-            $mysqlDumpPathSearch = Process::run(['which', $mysqlDumpPath->basename()]);
+        $gzipPath = null;
 
-            if (! $mysqlDumpPathSearch->successful()) {
-                $this->error('Unable to find '.$mysqlDumpPath);
+        if ($this->config->compress) {
+            $gzipPath = $this->searchPath($this->config->gzip_path ?? 'gzip');
 
+            if (!$gzipPath) {
                 return Command::FAILURE;
             }
-
-            $mysqlDumpPath = FilePath::fromPath($mysqlDumpPathSearch->output());
-            unset($mysqlDumpPathSearch);
-
-            $this->line("Located at $mysqlDumpPath");
         }
 
         // Configure database connection
@@ -162,11 +163,16 @@ class BackupCommand extends CommandBase
         $dump = (new MySQLDump(
             $snapshotFile,
             $this->config->mysqldump_path,
+            $gzipPath
         ))
             ->setHost($this->config->connection['host'])
             ->setPort($this->config->connection['port'])
             ->setUser($this->config->connection['username'] ?? null)
             ->setPassword($this->config->connection['password'] ?? null);
+
+        if ($this->config->compress && is_int($this->config->compress)) {
+            $dump->setCompressionLevel($this->config->compress);
+        }
 
         $dbList = $this->retrieveDbTableList();
         $planList = [];
@@ -208,22 +214,14 @@ class BackupCommand extends CommandBase
 
         $this->table(['Num', 'Database', 'Table', 'Ignore'], $planList);
 
+        if ($this->config->compress) {
+            $snapshotFile->addExtension('gz');
+        }
+
         if (! $this->option('dry')) {
             $this->newLine()->info('Dumping snapshot, please be patience...');
             $dump->process($this->output);
             $this->newLine()->line('Snapshot saved');
-
-            // Compress snapshot if proceeds
-            if ($this->config->compress) {
-                $compressedSnapshot = FilePath::fromPath($snapshotFile->absolutePath().'.gz');
-                $this->newLine()->info('Compressing snapshot...');
-                (new GzipCompressor($snapshotFile->absolutePath(), $compressedSnapshot->path()))
-                    ->gzip($this->config->compression_level ?: 6, $this->output);
-                $snapshotFile->rm();
-                $snapshotFile = $compressedSnapshot;
-                unset($compressedSnapshot);
-                $this->newLine()->line('Snapshot was compressed as: '.$snapshotFile->absolutePath());
-            }
 
             // Encrypt snapshot if proceeds
             if ($this->config->encryption['key'] ?? null) {
@@ -325,7 +323,6 @@ class BackupCommand extends CommandBase
 
             if (is_string($db)) {
                 $currentList['database'] = $db;
-
                 continue;
             }
 

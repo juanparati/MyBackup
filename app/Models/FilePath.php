@@ -23,7 +23,7 @@ class FilePath
             $path = preg_replace('/~/', getenv('HOME'), $path, 1);
         }
 
-        $this->path = $path;
+        $this->path = trim($path);
     }
 
     /**
