@@ -3,7 +3,7 @@
 namespace Tests\Feature;
 
 use Symfony\Component\Yaml\Yaml;
-use Tests\RequiresTmpFilesystem;
+use Tests\Concerns\RequiresTmpFilesystem;
 use Tests\TestCase;
 
 class InitCommandTest extends TestCase
