@@ -24,7 +24,7 @@ class RestoreCommand extends CommandBase
      */
     protected $signature = 'restore {backup_file}
         {--config_file=     : Use configuration file for the connection setup}
-        {--database=        : Database name}       
+        {--database=        : Database name}
         {--host=            : Host name (Can overwrite config_file settings)}
         {--port=            : Port number (Can overwrite config_file settings)}
         {--username=        : Database username (Can overwrite config_file settings)}
@@ -77,7 +77,7 @@ class RestoreCommand extends CommandBase
             ]
         );
 
-        if (empty($this->config->connection['password']) && null === $this->option('password')) {
+        if ($this->config->connection['password'] === null && null === $this->option('password')) {
             $this->config->connection = array_merge(
                 $this->config->connection,
                 ['password' => password('DB Password? (Blank = no password)')]

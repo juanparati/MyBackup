@@ -13,7 +13,7 @@
 A backup tool for MySQL/MariaDB that support the following features:
 
 - Backup plan configuration (Copy entire databases or specific tables with custom options).
-- On-fly GZ compression.
+- On-fly GZ compression and decompression.
 - Snapshot encryption.
 - Snapshot rotation.
 - Notifications (Slack and e-mail).
