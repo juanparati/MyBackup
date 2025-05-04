@@ -1,0 +1,17 @@
+name: 'Simple backup'
+catalog_file: catalog.sqlite
+snapshot_file: 'simple_backup_test.sql'
+connection:
+    driver: mysql
+    host: 127.0.0.1
+    port: 3306
+    username: root
+    password: ''
+mysqldump_path: mariadb-dump
+gzip_path: gzip
+backup_rotation: 1
+compress: false
+is_replica: false
+databases:
+    - DATABASE1
+    - DATABASE2
