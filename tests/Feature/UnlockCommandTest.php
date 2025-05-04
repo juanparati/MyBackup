@@ -2,7 +2,7 @@
 
 namespace Tests\Feature;
 
-use Tests\RequiresTmpFilesystem;
+use Tests\Concerns\RequiresTmpFilesystem;
 use Tests\TestCase;
 
 class UnlockCommandTest extends TestCase
