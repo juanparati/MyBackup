@@ -15,7 +15,7 @@ class InitCommand extends CommandBase
      *
      * @var string
      */
-    protected $signature = 'init {config_file=backup_plan.yaml : configuration file}       
+    protected $signature = 'init {config_file=backup_plan.yaml : configuration file}
         {--overwrite : overwrite old configuration file}
         {--catalog_path= : Path to catalog file}
         {--snapshot_path= : Path to snapshot file}
@@ -61,7 +61,8 @@ class InitCommand extends CommandBase
         );
 
         file_put_contents($configFile, Yaml::dump($config));
-        $this->output->success('📝 Plan created');
+
+        $this->output->success("📝 Plan created at $configFile");
 
         return Command::SUCCESS;
     }
