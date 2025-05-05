@@ -5,7 +5,7 @@ namespace Tests\Feature;
 use App\Helpers\FileEncrypt;
 use App\Models\FilePath;
 use Symfony\Component\Yaml\Yaml;
-use Tests\RequiresTmpFilesystem;
+use Tests\Concerns\RequiresTmpFilesystem;
 use Tests\TestCase;
 
 class DecryptCommandTest extends TestCase

@@ -1,9 +1,9 @@
 <?php
 
-namespace Tests;
+namespace Tests\Concerns;
 
 use Illuminate\Filesystem\Filesystem;
-use Illuminate\Support\Facades\File;
+use Tests\CreatesApplication;
 
 trait RequiresTmpFilesystem
 {
@@ -12,9 +12,8 @@ trait RequiresTmpFilesystem
 
     protected static string $tmpDir = '/tmp/mybackup_test/';
 
-    public static function setUpBeforeClass(): void
+    public static function setUpBeforeRequiresTmpFilesystem(): void
     {
-        parent::setUpBeforeClass();
         static::$tmpDir = sys_get_temp_dir().'/mybackup_test/';
 
         if (! file_exists(static::$tmpDir)) {
@@ -22,9 +21,8 @@ trait RequiresTmpFilesystem
         }
     }
 
-    public static function tearDownAfterClass(): void
+    public static function tearDownAfterRequiresTmpFilesystem(): void
     {
         (new Filesystem)->deleteDirectory(static::$tmpDir);
-        parent::tearDownAfterClass();
     }
 }

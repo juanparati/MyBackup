@@ -7,7 +7,7 @@ use App\Actions\RunAction;
 use App\Models\Config;
 use App\Models\FilePath;
 use App\Models\Placeholder;
-use Tests\RequiresTmpFilesystem;
+use Tests\Concerns\RequiresTmpFilesystem;
 use Tests\TestCase;
 
 class ActionTest extends TestCase

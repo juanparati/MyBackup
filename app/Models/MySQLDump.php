@@ -2,10 +2,11 @@
 
 namespace App\Models;
 
-use App\Models\Enums\FilePathScope;
 use Illuminate\Console\OutputStyle;
 use Illuminate\Support\Arr;
-use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Process\Exception\ProcessFailedException;
+use Symfony\Component\Process\Exception\ProcessTimedOutException;
+use Symfony\Component\Process\Process;
 
 class MySQLDump
 {
@@ -27,7 +28,14 @@ class MySQLDump
     /**
      * GZIP path
      */
-    protected FilePath $gzipPath;
+    protected FilePath|null $gzipPath = null;
+
+    /**
+     * GZIP compression level
+     *
+     * @var int
+     */
+    protected int $compressionLevel = 6;
 
     /**
      * Dump options
@@ -60,7 +68,7 @@ class MySQLDump
     protected array $locations = [];
 
     /**
-     * Set password.
+     * Set a password.
      */
     private ?string $password = null;
 
@@ -68,22 +76,14 @@ class MySQLDump
      * Constructor.
      */
     public function __construct(
-        FilePath|string $destFile,
-        FilePath|string $mysqldumpPath,
-    ) {
-        $this->snapshotFile = FilePath::fromPath($destFile);
+        FilePath|string      $destFile,
+        FilePath|string      $mysqldumpPath,
+        FilePath|string|null $gzipPath = null
+    )
+    {
+        $this->snapshotFile  = FilePath::fromPath($destFile);
         $this->mysqldumpPath = FilePath::fromPath($mysqldumpPath ?: '/usr/bin/mysqldump');
-
-        // Attempt to auto discover path
-        if (! $this->mysqldumpPath->exists(FilePathScope::EXTERNAL)) {
-            $mysqldumpPath = exec('which '.$this->mysqldumpPath->basename(), $path, $resultCode);
-
-            if (! $resultCode) {
-                $this->mysqldumpPath = FilePath::fromPath($mysqldumpPath);
-            } else {
-                throw new \RuntimeException('mysqldump command is missing');
-            }
-        }
+        $this->gzipPath      = $gzipPath ? FilePath::fromPath($gzipPath) : null;
     }
 
     /**
@@ -99,9 +99,9 @@ class MySQLDump
             $this->options = [];
         }
 
-        $this->databases = [];
+        $this->databases       = [];
         $this->databaseOptions = [];
-        $this->password = null;
+        $this->password        = null;
 
         return $this;
     }
@@ -181,6 +181,13 @@ class MySQLDump
         return $this;
     }
 
+
+    public function setCompressionLevel(int $compressionLevel): static
+    {
+        $this->compressionLevel = $compressionLevel > 9 ? 9 : (max($compressionLevel, 1));
+        return $this;
+    }
+
     /**
      * Add tables to ignore.
      *
@@ -190,7 +197,7 @@ class MySQLDump
     {
         $this->ignoreTables[$database] = array_merge(
             $this->ignoreTables,
-            array_map(fn ($r) => $database.'.'.$r, $tables)
+            array_map(fn($r) => $database . '.' . $r, $tables)
         );
 
         return $this;
@@ -213,10 +220,10 @@ class MySQLDump
      */
     public function addTable(string $database, string $table, ?string $where = null): static
     {
-        $this->tables[$database.' '.$table] = [
+        $this->tables[$database . ' ' . $table] = [
             'database' => $database,
-            'table' => $table,
-            'where' => $where,
+            'table'    => $table,
+            'where'    => $where,
         ];
 
         return $this;
@@ -236,8 +243,8 @@ class MySQLDump
 
     public function initialize(): static
     {
-        if (! $this->snapshotFile->truncate()) {
-            throw new \RuntimeException('Unable to write file '.$this->snapshotFile);
+        if (!$this->snapshotFile->truncate()) {
+            throw new \RuntimeException('Unable to write file ' . $this->snapshotFile);
         }
 
         return $this;
@@ -246,62 +253,70 @@ class MySQLDump
     /**
      * Process and compress snapshot
      *
-     * @param  OutputStyle|null  $output
+     * @param OutputStyle|null $output
      * @return $this
      */
     public function process(?OutputStyle $console = null): static
     {
-        if (! $this->snapshotFile->exists()) {
+        if (!$this->snapshotFile->exists()) {
             $this->initialize();
         }
 
-        $output = [];
-        $status = false;
-
         $dumpCommands = $this->generateCommandForTables() + $this->generateCommandForDatabases();
-        $bar = $console?->createProgressBar(count(Arr::flatten($dumpCommands)) + 1);
+        $bar          = $console?->createProgressBar(count(Arr::flatten($dumpCommands)) + 1);
         $bar?->advance();
-
-        if ($this->password) {
-            putenv(static::PASSWORD_ENV_VARIABLE.'='.$this->password);
-        }
 
         foreach ($dumpCommands as $database => $commands) {
 
             if ($this->locations[$database] ?? null) {
-                file_put_contents(
-                    $this->snapshotFile->absolutePath(),
-                    sprintf("USE %s;\n", $this->locations[$database]),
-                    FILE_APPEND
-                );
+                $this->addContentToSnapshot(sprintf("USE %s;\n", $this->locations[$database]));
             }
 
             foreach ($commands as $command) {
-
-                // dump($command);
-                exec($command, $output, $status);
 
                 if ($console?->isVerbose()) {
                     $console?->comment($command);
                 }
 
-                if ($status !== Command::SUCCESS) {
+                $process = Process::fromShellCommandline(
+                    $command,
+                    env: $this->password ? [static::PASSWORD_ENV_VARIABLE => $this->password] : null,
+                    timeout: null
+                );
+
+                try {
+                    $process->mustRun();
+                } catch (ProcessFailedException $e) {
                     if ($console?->isVerbose()) {
-                        $console?->error($output);
+                        $console?->error($e->getMessage() . ' - Errno ' . $e->getCode());
                     }
 
                     throw new \RuntimeException("Unable to dump snapshot: $command");
                 }
 
-                file_put_contents($this->snapshotFile->absolutePath(), "\n\n", FILE_APPEND);
-
+                $this->addContentToSnapshot("\n\n");
                 $bar?->advance();
             }
         }
 
-        putenv(static::PASSWORD_ENV_VARIABLE);
-
         return $this;
+    }
+
+
+    /**
+     * Append content to snapshot.
+     *
+     * @param string $content
+     * @return void
+     */
+    protected function addContentToSnapshot(string $content): void
+    {
+        if ($this->gzipPath) {
+            // It's possible to concatenate gzipped files.
+            $content = gzencode($content, 0);
+        }
+
+        file_put_contents($this->snapshotFile->absolutePath(), $content, FILE_APPEND);
     }
 
     /**
@@ -309,7 +324,7 @@ class MySQLDump
      */
     protected function generateCommandForTables(): array
     {
-        if (! $this->tables) {
+        if (!$this->tables) {
             return [];
         }
 
@@ -319,20 +334,23 @@ class MySQLDump
 
         foreach ($this->tables as $k => $tableRecord) {
             $commands[$tableRecord['database']][$k] = $command;
-            $currentCommand = &$commands[$tableRecord['database']][$k];
+            $currentCommand                         = &$commands[$tableRecord['database']][$k];
 
             if ($this->databaseOptions[$tableRecord['database']] ?? null) {
-                $currentCommand .= ' '.implode(' ', $this->databaseOptions[$tableRecord['database']]);
+                $currentCommand .= ' ' . implode(' ', $this->databaseOptions[$tableRecord['database']]);
             }
 
             if ($tableRecord['where']) {
-                $currentCommand .= ' --where='.escapeshellarg((new Placeholder)->replace($tableRecord['where']));
+                $currentCommand .= ' --where=' . escapeshellarg((new Placeholder)->replace($tableRecord['where']));
             }
 
-            $currentCommand .= ' '.$tableRecord['database'].' '.$tableRecord['table'];
+            $currentCommand .= ' ' . $tableRecord['database'] . ' ' . $tableRecord['table'];
+
+            if ($this->gzipPath)
+                $currentCommand .= ' | ' . $this->gzipPath->path() . " -{$this->compressionLevel} -c";
 
             // Add dump output
-            $currentCommand .= ' >> '.$this->snapshotFile->absolutePath();
+            $currentCommand .= ' >> ' . $this->snapshotFile->absolutePath();
 
             // Suppress errors and warnings
             $currentCommand .= ' 2>&1';
@@ -346,7 +364,7 @@ class MySQLDump
      */
     protected function generateCommandForDatabases(): array
     {
-        if (! $this->databases) {
+        if (!$this->databases) {
             return [];
         }
 
@@ -356,23 +374,28 @@ class MySQLDump
 
         foreach ($this->databases as $k => $database) {
             $commands[$database][$k] = $command;
-            $currentCommand = &$commands[$database][$k];
+            $currentCommand          = &$commands[$database][$k];
 
             if ($this->databaseOptions[$database] ?? null) {
-                $currentCommand .= ' '.implode(' ', $this->databaseOptions[$database]);
+                $currentCommand .= ' ' . implode(' ', $this->databaseOptions[$database]);
             }
 
             foreach (($this->ignoreTables[$database] ?? []) as $ignoreTable) {
-                $currentCommand .= ' --ignore-table='.$ignoreTable;
+                $currentCommand .= ' --ignore-table=' . $ignoreTable;
             }
 
-            $currentCommand .= ' --databases '.$database;
+            $currentCommand .= ' --databases ' . $database;
+
+            if ($this->gzipPath)
+                $currentCommand .= ' | ' . $this->gzipPath->path() . " -{$this->compressionLevel} -c";
 
             // Add dump output
-            $currentCommand .= ' >> '.$this->snapshotFile->absolutePath();
+            $currentCommand .= ' >> ' . $this->snapshotFile->absolutePath();
 
             // Suppress errors and warnings
             $currentCommand .= ' 2>&1';
+
+            echo $currentCommand;
         }
 
         return $commands;
@@ -383,7 +406,7 @@ class MySQLDump
      *
      * @return string
      */
-    protected function generateBaseCommand()
+    protected function generateBaseCommand(): string
     {
         $command = $this->mysqldumpPath->path();
 
@@ -393,7 +416,7 @@ class MySQLDump
                 continue;
             }
 
-            $command .= ' '.$option;
+            $command .= ' ' . $option;
 
             if ($option[strlen($option) - 1] !== '=') {
                 $command .= ' ';

@@ -146,6 +146,7 @@ class Config implements \ArrayAccess
                 'password' => '',
             ],
             'mysqldump_path' => 'mysqldump',
+            'gzip_path' => 'gzip',
             'backup_rotation' => 1,
             'compress' => false,
             'is_replica' => false,
