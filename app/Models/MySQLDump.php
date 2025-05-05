@@ -5,7 +5,6 @@ namespace App\Models;
 use Illuminate\Console\OutputStyle;
 use Illuminate\Support\Arr;
 use Symfony\Component\Process\Exception\ProcessFailedException;
-use Symfony\Component\Process\Exception\ProcessTimedOutException;
 use Symfony\Component\Process\Process;
 
 class MySQLDump
