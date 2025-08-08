@@ -64,7 +64,7 @@ jobs:
       run: composer install --prefer-dist --no-progress --no-dev
 
     - name: Creating application
-      run: php application app:build mybackup.phar --build-version=${{ steps.previoustag.outputs.tag }} -n -q
+      run: php mybackup app:build mybackup.phar --build-version=${{ steps.previoustag.outputs.tag }} -n -q
 
     - name: Ensure the PHAR works
       run: php builds/mybackup.phar --version
@@ -81,28 +81,28 @@ jobs:
       uses: actions/download-artifact@v4
       with:
         path: builds
-        run-id: 12930692838
+        run-id: 14831617811
         github-token: ${{ github.token }}
 
     - name: Downloading micro.sfx from Build micro (Linux amd64)
       uses: actions/download-artifact@v4
       with:
         path: builds
-        run-id: 12930694381
+        run-id: 14831630980
         github-token: ${{ github.token }}
 
     - name: Downloading micro.sfx from Build micro (MacOs aarch64)
       uses: actions/download-artifact@v4
       with:
         path: builds
-        run-id: 12930696130
+        run-id: 14831632435
         github-token: ${{ github.token }}
 
     - name: Downloading micro.sfx from Build micro (MacOs x86)
       uses: actions/download-artifact@v4
       with:
         path: builds
-        run-id: 12930697451
+        run-id: 14831634159
         github-token: ${{ github.token }}
 
     - name: Listing build directory

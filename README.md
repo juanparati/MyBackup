@@ -24,6 +24,10 @@ A backup tool for MySQL/MariaDB that support the following features:
 - Set configuration values from environment variables.
 - Backup restoration.
 
+## Builds
+
+See [https://github.com/juanparati/MyBackup/releases/latest](https://github.com/juanparati/MyBackup/releases/latest)
+
 ## How does it work?
 
 ### Perform backups
