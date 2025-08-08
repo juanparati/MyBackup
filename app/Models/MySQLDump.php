@@ -393,8 +393,6 @@ class MySQLDump
 
             // Suppress errors and warnings
             $currentCommand .= ' 2>&1';
-
-            echo $currentCommand;
         }
 
         return $commands;

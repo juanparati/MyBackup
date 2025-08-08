@@ -27,8 +27,19 @@ class SQLFileReader
     protected mixed $fp;
 
 
+    /**
+     * Total bytes read.
+     *
+     * @var int
+     */
     protected int $totalRead = 0;
 
+
+    /**
+     * Total bytes in the file.
+     *
+     * @var int
+     */
     protected int $fileSize;
 
     /**

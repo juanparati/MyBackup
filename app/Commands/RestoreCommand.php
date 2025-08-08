@@ -10,6 +10,7 @@ use App\Helpers\SQLFileReader;
 use App\Models\Config;
 use App\Models\FilePath;
 use Illuminate\Support\Facades\DB;
+use PDO;
 use Symfony\Component\Console\Command\Command;
 use function Laravel\Prompts\password;
 
@@ -23,15 +24,18 @@ class RestoreCommand extends CommandBase
      * @var string
      */
     protected $signature = 'restore {backup_file}
-        {--config_file=     : Use configuration file for the connection setup}
-        {--database=        : Database name}
-        {--host=            : Host name (Can overwrite config_file settings)}
-        {--port=            : Port number (Can overwrite config_file settings)}
-        {--username=        : Database username (Can overwrite config_file settings)}
-        {--password=        : Use defined password (Can overwrite config_file settings)}
-        {--driver=mysql     : Database driver (Can overwrite config_file settings)}
-        {--force            : Do to request confirmation before restoration
-        {--dry              : Do not perform backup}
+        {--config_file=            : Use configuration file for the connection setup}
+        {--database=               : Database name}
+        {--host=                   : Host name (Can overwrite config_file settings)}
+        {--port=                   : Port number (Can overwrite config_file settings)}
+        {--username=               : Database username (Can overwrite config_file settings)}
+        {--password=               : Use defined password (Can overwrite config_file settings)}
+        {--driver=mysql            : Database driver (Can overwrite config_file settings)}
+        {--use-compression=true    : Use compression}
+        {--force                   : Do to request confirmation before restoration
+        {--init-command=           : Run SQL command before restoration}
+        {--end-command=            : Run SQL command after restoration}
+        {--dry                     : Do not perform backup}
     ';
 
     /**
@@ -74,6 +78,9 @@ class RestoreCommand extends CommandBase
                 'username' => $this->option('username') ?: ($this->config->connection['username'] ?? 'root'),
                 'password' => $this->option('password') ?: ($this->config->connection['password'] ?? null),
                 'database' => $this->option('database') ?: ($this->config->connection['database'] ?? ''),
+                'options'  => [
+                    PDO::MYSQL_ATTR_COMPRESS => $this->option('use-compression') === 'true',
+                ],
             ]
         );
 
@@ -114,6 +121,12 @@ class RestoreCommand extends CommandBase
             return Command::FAILURE;
         }
 
+        if ($this->option('init-command')) {
+            $this->newLine()->info('Running init command...');
+            $this->newLine()->line($this->option('init-command'));
+            DB::connection('target')->statement($this->option('init-command'));
+        }
+
         $this->newLine()->info('Restoring...');
         $progressBar = $this->output->createProgressBar($backupFileSize / 1024);
 
@@ -123,6 +136,12 @@ class RestoreCommand extends CommandBase
         }
 
         $progressBar->finish();
+
+        if ($this->option('end-command')) {
+            $this->newLine()->info('Running end command...');
+            $this->newLine()->line($this->option('end-command'));
+            DB::connection('target')->statement($this->option('end-command'));
+        }
 
         $this->newLine();
         $this->output->success('👍 Restore process was successfully finished!');
