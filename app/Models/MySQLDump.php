@@ -349,7 +349,7 @@ class MySQLDump
                 $currentCommand .= ' | ' . $this->gzipPath->path() . " -{$this->compressionLevel} -c";
 
             // Add dump output
-            $currentCommand .= ' >> ' . $this->snapshotFile->absolutePath();
+            $currentCommand .= ' >> "' . $this->snapshotFile->absolutePath() . '"';
 
             // Suppress errors and warnings
             $currentCommand .= ' 2>&1';
@@ -389,7 +389,7 @@ class MySQLDump
                 $currentCommand .= ' | ' . $this->gzipPath->path() . " -{$this->compressionLevel} -c";
 
             // Add dump output
-            $currentCommand .= ' >> ' . $this->snapshotFile->absolutePath();
+            $currentCommand .= ' >> "' . $this->snapshotFile->absolutePath() . '"';
 
             // Suppress errors and warnings
             $currentCommand .= ' 2>&1';
