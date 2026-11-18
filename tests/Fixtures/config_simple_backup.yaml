@@ -8,7 +8,6 @@ connection:
     username: root
     password: ''
 mysqldump_path: mariadb-dump
-gzip_path: gzip
 backup_rotation: 1
 compress: false
 is_replica: false

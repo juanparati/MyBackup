@@ -114,16 +114,6 @@ class BackupCommand extends CommandBase
             return Command::FAILURE;
         }
 
-        $gzipPath = null;
-
-        if ($this->config->compress) {
-            $gzipPath = $this->searchPath($this->config->gzip_path ?? 'gzip');
-
-            if (!$gzipPath) {
-                return Command::FAILURE;
-            }
-        }
-
         // Configure database connection
         $this->newLine()->info('Configuring database connection...');
         $this->setTargetConnection();
@@ -163,7 +153,7 @@ class BackupCommand extends CommandBase
         $dump = (new MySQLDump(
             $snapshotFile,
             $this->config->mysqldump_path,
-            $gzipPath
+            (bool) $this->config->compress
         ))
             ->setHost($this->config->connection['host'])
             ->setPort($this->config->connection['port'])

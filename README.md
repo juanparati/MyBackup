@@ -60,7 +60,6 @@ connection:
    username: "root"
    password: "secret"                                 # When this line is missing it will prompt the password.
 mysqldump_path: "mysqldump"                           # Path to mysqldump/mariadb-dump.            
-gzip_path: "gzip"                                     # Path to gzip (Only used when compress != false)
 backup_rotation: "2 days"                             # It will delete the backups older than 2 days.
 compress: true                                        # It will compress the snapshot file (Use 1-9 for compression level).                
 is_replica: true                                      # It will check if the read-replica is synchronized.                             

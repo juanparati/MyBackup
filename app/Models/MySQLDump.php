@@ -25,9 +25,9 @@ class MySQLDump
     protected FilePath $mysqldumpPath;
 
     /**
-     * GZIP path
+     * Compress snapshot with GZIP
      */
-    protected FilePath|null $gzipPath = null;
+    protected bool $compress = false;
 
     /**
      * GZIP compression level
@@ -77,12 +77,12 @@ class MySQLDump
     public function __construct(
         FilePath|string      $destFile,
         FilePath|string      $mysqldumpPath,
-        FilePath|string|null $gzipPath = null
+        bool                 $compress = false
     )
     {
         $this->snapshotFile  = FilePath::fromPath($destFile);
         $this->mysqldumpPath = FilePath::fromPath($mysqldumpPath ?: '/usr/bin/mysqldump');
-        $this->gzipPath      = $gzipPath ? FilePath::fromPath($gzipPath) : null;
+        $this->compress      = $compress;
     }
 
     /**
@@ -284,7 +284,7 @@ class MySQLDump
                 );
 
                 try {
-                    $process->mustRun();
+                    $this->dumpToSnapshot($process);
                 } catch (ProcessFailedException $e) {
                     if ($console?->isVerbose()) {
                         $console?->error($e->getMessage() . ' - Errno ' . $e->getCode());
@@ -303,6 +303,64 @@ class MySQLDump
 
 
     /**
+     * Stream the dump output into the snapshot.
+     *
+     * The output is compressed in-process, so the dump exit code is not
+     * masked by a shell pipe and stderr never ends up in the snapshot.
+     *
+     * @param Process $process
+     * @return void
+     * @throws ProcessFailedException
+     */
+    protected function dumpToSnapshot(Process $process): void
+    {
+        $file = fopen($this->snapshotFile->absolutePath(), 'ab');
+
+        if (!$file) {
+            throw new \RuntimeException('Unable to write file ' . $this->snapshotFile);
+        }
+
+        // Each dump is a gzip member, it's possible to concatenate gzipped files.
+        $deflate = $this->compress
+            ? deflate_init(ZLIB_ENCODING_GZIP, ['level' => $this->compressionLevel])
+            : null;
+
+        try {
+            $process->start();
+
+            foreach ($process->getIterator(Process::ITER_SKIP_ERR) as $data) {
+                $this->writeToSnapshot($file, $deflate ? deflate_add($deflate, $data, ZLIB_NO_FLUSH) : $data);
+            }
+
+            if ($deflate) {
+                $this->writeToSnapshot($file, deflate_add($deflate, '', ZLIB_FINISH));
+            }
+
+            $process->wait();
+        } finally {
+            fclose($file);
+        }
+
+        if (!$process->isSuccessful()) {
+            throw new ProcessFailedException($process);
+        }
+    }
+
+    /**
+     * Write content to the snapshot file handle.
+     *
+     * @param resource $file
+     * @param string $content
+     * @return void
+     */
+    protected function writeToSnapshot($file, string $content): void
+    {
+        if ($content !== '' && fwrite($file, $content) === false) {
+            throw new \RuntimeException('Unable to write file ' . $this->snapshotFile);
+        }
+    }
+
+    /**
      * Append content to snapshot.
      *
      * @param string $content
@@ -310,7 +368,7 @@ class MySQLDump
      */
     protected function addContentToSnapshot(string $content): void
     {
-        if ($this->gzipPath) {
+        if ($this->compress) {
             // It's possible to concatenate gzipped files.
             $content = gzencode($content, 0);
         }
@@ -344,15 +402,6 @@ class MySQLDump
             }
 
             $currentCommand .= ' ' . $tableRecord['database'] . ' ' . $tableRecord['table'];
-
-            if ($this->gzipPath)
-                $currentCommand .= ' | ' . $this->gzipPath->path() . " -{$this->compressionLevel} -c";
-
-            // Add dump output
-            $currentCommand .= ' >> "' . $this->snapshotFile->absolutePath() . '"';
-
-            // Suppress errors and warnings
-            $currentCommand .= ' 2>&1';
         }
 
         return $commands;
@@ -384,15 +433,6 @@ class MySQLDump
             }
 
             $currentCommand .= ' --databases ' . $database;
-
-            if ($this->gzipPath)
-                $currentCommand .= ' | ' . $this->gzipPath->path() . " -{$this->compressionLevel} -c";
-
-            // Add dump output
-            $currentCommand .= ' >> "' . $this->snapshotFile->absolutePath() . '"';
-
-            // Suppress errors and warnings
-            $currentCommand .= ' 2>&1';
         }
 
         return $commands;
