@@ -95,14 +95,14 @@ jobs:
       uses: actions/download-artifact@v4
       with:
         path: builds
-        run-id: 44299669366
+        run-id: 44301328039
         github-token: ${{ github.token }}
 
     - name: Downloading micro.sfx from Build micro (MacOs x86)
       uses: actions/download-artifact@v4
       with:
         path: builds
-        run-id: 44298706679
+        run-id: 44301390360
         github-token: ${{ github.token }}
 
     - name: Listing build directory
