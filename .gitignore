@@ -42,3 +42,4 @@ devbox.json
 devbox.lock
 /devbox.d
 /.claude/
+/skills-lock.json

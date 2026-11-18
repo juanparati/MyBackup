@@ -11,13 +11,13 @@ use App\Commands\Concerns\NeedSearchPath;
 use App\Commands\Concerns\NeedTargetConnection;
 use App\Helpers\DBStatus;
 use App\Helpers\DeclarativeHumanDate;
-use App\Helpers\FileEncrypt;
 use App\Models\Catalog;
 use App\Models\Enums\FilePathScope;
 use App\Models\FilePath;
 use App\Models\Lock;
 use App\Models\MySQLDump;
 use App\Models\Placeholder;
+use App\Notifications\BackupFailedNotification;
 use App\Notifications\BackupFinishedNotification;
 use Symfony\Component\Console\Command\Command;
 
@@ -50,6 +50,11 @@ class BackupCommand extends CommandBase
     protected $description = 'Perform backup';
 
     /**
+     * Reason of the backup failure.
+     */
+    protected ?string $failureReason = null;
+
+    /**
      * Execute the console command.
      */
     public function handle()
@@ -76,10 +81,16 @@ class BackupCommand extends CommandBase
             $this->newLine()->info('Checking lock...');
 
             if (Lock::hasLock()) {
-                $this->error('Backup process is locked');
-                $this->line('If the backup failed run '.EXECUTABLE.' unlock '.$this->argument('config_file'));
+                if (Lock::isStale()) {
+                    $this->warn('Removing stale lock, the process that created it is no longer running');
+                    Lock::unlock();
+                } else {
+                    $this->failure('Backup process is locked');
+                    $this->line('If the backup failed run '.EXECUTABLE.' unlock '.$this->argument('config_file'));
+                    $this->notifyFailure();
 
-                return 0;
+                    return Command::FAILURE;
+                }
             }
 
             Lock::lock();
@@ -89,17 +100,42 @@ class BackupCommand extends CommandBase
         try {
             $exitCode = $this->executeTasks();
         } catch (\Exception $e) {
-            $this->error('Unable to perform backup: '.$e->getMessage());
-            $exitCode = Command::FAILURE;
+            $exitCode = $this->failure('Unable to perform backup: '.$e->getMessage());
         }
 
         if (! $this->option('dry')) {
             Lock::unlock();
             $this->info('Lock destroyed');
+
+            if ($exitCode !== Command::SUCCESS) {
+                $this->notifyFailure();
+            }
         }
 
         return $exitCode;
 
+    }
+
+    /**
+     * Report a backup failure.
+     */
+    protected function failure(string $reason): int
+    {
+        $this->error($reason);
+        $this->failureReason = $reason;
+
+        return Command::FAILURE;
+    }
+
+    /**
+     * Send the failure notification.
+     */
+    protected function notifyFailure(): void
+    {
+        $this->sendNotification(BackupFailedNotification::class, [
+            'name' => $this->config->name ?? $this->argument('config_file'),
+            'reason' => $this->failureReason ?? 'Unknown error, check the backup output',
+        ]);
     }
 
     protected function executeTasks(): int
@@ -111,6 +147,8 @@ class BackupCommand extends CommandBase
         );
 
         if (!$mysqlDumpPath) {
+            $this->failureReason = 'Unable to find mysqldump/mariadb-dump';
+
             return Command::FAILURE;
         }
 
@@ -121,10 +159,7 @@ class BackupCommand extends CommandBase
         if (DBStatus::make()->isConnected()) {
             $this->line('Connected to database');
         } else {
-            $this->error('Could not connect to database');
-            Lock::unlock();
-
-            return Command::FAILURE;
+            return $this->failure('Could not connect to database');
         }
 
         // Check replication status
@@ -133,25 +168,33 @@ class BackupCommand extends CommandBase
             if (DBStatus::make()->hasActiveReplication()) {
                 $this->line('Replication already running');
             } else {
-                $this->error('Replication is not working');
-                Lock::unlock();
-
-                return Command::FAILURE;
+                return $this->failure('Replication is not working');
             }
         }
 
         $this->newLine()->info('Creating backup plan...');
         $snapshotFile = FilePath::fromPath((new Placeholder)->replace($this->config->snapshot_file));
+        $encryption = $this->config->encryptionSettings();
+
+        if ($this->config->compress) {
+            $snapshotFile->addExtension('gz');
+        }
+
+        if ($encryption) {
+            $snapshotFile->addExtension('aes');
+        }
+
+        // The snapshot is written into a partial file that is renamed once the backup is completed
+        $dumpFile = FilePath::fromPath($snapshotFile->path().'.partial');
+
         $this->line('Snapshot file: '.$snapshotFile->path());
 
         if ($snapshotFile->exists(FilePathScope::EXTERNAL)) {
-            $this->error('Snapshot already exists!');
-
-            return Command::FAILURE;
+            return $this->failure('Snapshot already exists!');
         }
 
         $dump = (new MySQLDump(
-            $snapshotFile,
+            $dumpFile,
             $this->config->mysqldump_path,
             (bool) $this->config->compress
         ))
@@ -162,6 +205,10 @@ class BackupCommand extends CommandBase
 
         if ($this->config->compress && is_int($this->config->compress)) {
             $dump->setCompressionLevel($this->config->compress);
+        }
+
+        if ($encryption) {
+            $dump->setEncryption($encryption['key'], $encryption['method']);
         }
 
         $dbList = $this->retrieveDbTableList();
@@ -204,38 +251,23 @@ class BackupCommand extends CommandBase
 
         $this->table(['Num', 'Database', 'Table', 'Ignore'], $planList);
 
-        if ($this->config->compress) {
-            $snapshotFile->addExtension('gz');
-        }
-
         if (! $this->option('dry')) {
-            $this->newLine()->info('Dumping snapshot, please be patience...');
-            $dump->process($this->output);
-            $this->newLine()->line('Snapshot saved');
+            try {
+                $this->newLine()->info('Dumping snapshot, please be patience...');
+                $dump->initialize()->process($this->output);
 
-            // Encrypt snapshot if proceeds
-            if ($this->config->encryption['key'] ?? null) {
-                $this->newLine()->info('Encrypting snapshot...');
-                $encryptedSnapshot = FilePath::fromPath($snapshotFile->absolutePath().'.aes');
-                $encrypted = FileEncrypt::encrypt(
-                    $snapshotFile->absolutePath(),
-                    $encryptedSnapshot->path(),
-                    $this->config->encryption['key'],
-                    $this->config->encryption['method'] ?? 'AES-128-CBC',
-                    $this->output
-                );
-
-                if (! $encrypted) {
-                    $this->error('Unable to encrypt snapshot file');
-
-                    return Command::FAILURE;
+                if (! rename($dumpFile->path(), $snapshotFile->path())) {
+                    return $this->failure('Unable to write snapshot file '.$snapshotFile->path());
                 }
 
-                $snapshotFile->rm();
-                $snapshotFile = $encryptedSnapshot;
-                unset($encryptedSnapshot);
-                $this->newLine()->line('Snapshot was encrypted as: '.$snapshotFile->absolutePath());
-
+                $this->newLine()->line(
+                    $encryption ? 'Snapshot saved and encrypted' : 'Snapshot saved'
+                );
+            } finally {
+                // Incomplete snapshots are never kept
+                if ($dumpFile->exists()) {
+                    $dumpFile->rm();
+                }
             }
 
             // Save last snapshot into the catalog

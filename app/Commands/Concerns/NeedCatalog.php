@@ -43,10 +43,20 @@ trait NeedCatalog
 
             Schema::create('locks', function (Blueprint $table) {
                 $table->id();
+                $table->unsignedInteger('pid')->nullable();
+                $table->string('hostname')->nullable();
                 $table->timestamps();
             });
 
             $this->line('💾 Created catalog file at: '.config('database.connections.default.database'));
+        }
+
+        // Upgrade catalogs created before the lock owner was registered
+        if (! Schema::hasColumn('locks', 'pid')) {
+            Schema::table('locks', function (Blueprint $table) {
+                $table->unsignedInteger('pid')->nullable();
+                $table->string('hostname')->nullable();
+            });
         }
 
     }

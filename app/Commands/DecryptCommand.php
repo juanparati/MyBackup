@@ -41,6 +41,14 @@ class DecryptCommand extends CommandBase
             return $configErrorCode;
         }
 
+        $encryption = $this->config->encryptionSettings();
+
+        if (! $encryption) {
+            $this->error('Encryption key is not defined in the configuration');
+
+            return Command::FAILURE;
+        }
+
         // Read encrypted backup
         $backupFile = FilePath::fromPath($this->argument('backup_file'));
 
@@ -68,13 +76,14 @@ class DecryptCommand extends CommandBase
         $result = FileEncrypt::decrypt(
             $backupFile->absolutePath(),
             $outputFile,
-            $this->config['encryption']['key'],
-            $this->config['encryption']['method'],
+            $encryption['key'],
+            $encryption['method'],
             $this->output
         );
 
         if (! $result) {
-            $this->error('Unable to decrypt file');
+            $outputFile->rm();
+            $this->error('Unable to decrypt file, check the encryption key');
 
             return Command::FAILURE;
         }

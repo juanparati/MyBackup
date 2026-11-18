@@ -6,6 +6,7 @@ use App\Commands\Concerns\NeedConfig;
 use App\Commands\Concerns\NeedNotifications;
 use App\Commands\Concerns\NeedTargetConnection;
 use App\Helpers\DBStatus;
+use App\Helpers\FileEncrypt;
 use App\Helpers\SQLFileReader;
 use App\Models\Config;
 use App\Models\FilePath;
@@ -44,6 +45,11 @@ class RestoreCommand extends CommandBase
      * @var string
      */
     protected $description = 'Perform backup';
+
+    /**
+     * Temporary decrypted backup file.
+     */
+    protected ?FilePath $decryptedFile = null;
 
     /**
      * Execute the console command.
@@ -96,6 +102,11 @@ class RestoreCommand extends CommandBase
         } catch (\Exception $e) {
             $this->error('Unable to restore backup: ' . $e->getMessage());
             $exitCode = Command::FAILURE;
+        } finally {
+            // The decrypted backup is never kept
+            if ($this->decryptedFile?->exists()) {
+                $this->decryptedFile->rm();
+            }
         }
 
         return $exitCode;
@@ -105,9 +116,14 @@ class RestoreCommand extends CommandBase
     {
         // Open backup file
         $this->newLine()->info('Opening backup file...');
+        $this->line("File path: {$file->path()}");
+
+        if ($file->hasExtension('aes')) {
+            $file = $this->decryptBackup($file);
+        }
+
         $backupFile     = new SQLFileReader($file->absolutePath());
         $backupFileSize = $backupFile->getFileSize();
-        $this->line("File path: {$file->path()}");
         $this->line(sprintf('File size: %d KB', $backupFileSize / 1024));
 
         // Configure database connection
@@ -130,12 +146,21 @@ class RestoreCommand extends CommandBase
         $this->newLine()->info('Restoring...');
         $progressBar = $this->output->createProgressBar($backupFileSize / 1024);
 
+        $statements = 0;
+
         foreach ($backupFile->readStatement() as $statement) {
             DB::connection('target')->statement($statement);
             $progressBar->setProgress($backupFile->getTotalRead() / 1024);
+            $statements++;
         }
 
         $progressBar->finish();
+
+        if (!$statements) {
+            $this->newLine();
+            $this->error('No SQL statements found in the backup file');
+            return Command::FAILURE;
+        }
 
         if ($this->option('end-command')) {
             $this->newLine()->info('Running end command...');
@@ -147,5 +172,30 @@ class RestoreCommand extends CommandBase
         $this->output->success('👍 Restore process was successfully finished!');
 
         return Command::SUCCESS;
+    }
+
+    /**
+     * Decrypt the backup into a temporary file.
+     */
+    protected function decryptBackup(FilePath $file): FilePath
+    {
+        $encryption = $this->config->encryptionSettings();
+
+        if (!$encryption) {
+            throw new \RuntimeException('Backup file is encrypted, use --config_file with the encryption key');
+        }
+
+        $this->line('🔏 Decrypting backup file...');
+
+        // Keep the inner extensions, so compressed backups are detected
+        $this->decryptedFile = FilePath::fromPath($file->dirname() . DS . uniqid('restore_') . '_' . $file->simpleName());
+
+        if (!FileEncrypt::decrypt($file->absolutePath(), $this->decryptedFile->path(), $encryption['key'], $encryption['method'], $this->output)) {
+            throw new \RuntimeException('Unable to decrypt backup file, check the encryption key');
+        }
+
+        $this->newLine();
+
+        return $this->decryptedFile;
     }
 }

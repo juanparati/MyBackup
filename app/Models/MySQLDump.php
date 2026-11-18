@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Helpers\EncryptedWriter;
 use Illuminate\Console\OutputStyle;
 use Illuminate\Support\Arr;
 use Symfony\Component\Process\Exception\ProcessFailedException;
@@ -35,6 +36,28 @@ class MySQLDump
      * @var int
      */
     protected int $compressionLevel = 6;
+
+    /**
+     * Encryption key
+     */
+    protected ?string $encryptionKey = null;
+
+    /**
+     * Encryption method
+     */
+    protected string $encryptionMethod = 'AES-128-CBC';
+
+    /**
+     * Snapshot file handle while the snapshot is processed.
+     *
+     * @var resource|null
+     */
+    protected $snapshotHandle = null;
+
+    /**
+     * Snapshot encryption while the snapshot is processed.
+     */
+    protected ?EncryptedWriter $encryptedWriter = null;
 
     /**
      * Dump options
@@ -188,6 +211,19 @@ class MySQLDump
     }
 
     /**
+     * Encrypt the snapshot while it's dumped.
+     *
+     * @return $this
+     */
+    public function setEncryption(?string $key, string $method = 'AES-128-CBC'): static
+    {
+        $this->encryptionKey    = $key;
+        $this->encryptionMethod = $method;
+
+        return $this;
+    }
+
+    /**
      * Add tables to ignore.
      *
      * @return $this
@@ -195,7 +231,7 @@ class MySQLDump
     public function addIgnoreTables(string $database, array $tables): static
     {
         $this->ignoreTables[$database] = array_merge(
-            $this->ignoreTables,
+            $this->ignoreTables[$database] ?? [],
             array_map(fn($r) => $database . '.' . $r, $tables)
         );
 
@@ -250,7 +286,7 @@ class MySQLDump
     }
 
     /**
-     * Process and compress snapshot
+     * Process, compress and encrypt snapshot
      *
      * @param OutputStyle|null $output
      * @return $this
@@ -261,41 +297,60 @@ class MySQLDump
             $this->initialize();
         }
 
-        $dumpCommands = $this->generateCommandForTables() + $this->generateCommandForDatabases();
-        $bar          = $console?->createProgressBar(count(Arr::flatten($dumpCommands)) + 1);
-        $bar?->advance();
+        $this->snapshotHandle = fopen($this->snapshotFile->absolutePath(), 'ab');
 
-        foreach ($dumpCommands as $database => $commands) {
+        if (!$this->snapshotHandle) {
+            throw new \RuntimeException('Unable to write file ' . $this->snapshotFile);
+        }
 
-            if ($this->locations[$database] ?? null) {
-                $this->addContentToSnapshot(sprintf("USE %s;\n", $this->locations[$database]));
-            }
+        try {
+            // The whole snapshot is encrypted, so it never reaches the disk unencrypted
+            $this->encryptedWriter = $this->encryptionKey
+                ? new EncryptedWriter($this->snapshotHandle, $this->encryptionKey, $this->encryptionMethod)
+                : null;
 
-            foreach ($commands as $command) {
+            $dumpCommands = $this->generateCommandForTables() + $this->generateCommandForDatabases();
+            $bar          = $console?->createProgressBar(count(Arr::flatten($dumpCommands)) + 1);
+            $bar?->advance();
 
-                if ($console?->isVerbose()) {
-                    $console?->comment($command);
+            foreach ($dumpCommands as $database => $commands) {
+
+                if ($this->locations[$database] ?? null) {
+                    $this->addContentToSnapshot(sprintf("USE %s;\n", $this->locations[$database]));
                 }
 
-                $process = Process::fromShellCommandline(
-                    $command,
-                    env: $this->password ? [static::PASSWORD_ENV_VARIABLE => $this->password] : null,
-                    timeout: null
-                );
+                foreach ($commands as $command) {
 
-                try {
-                    $this->dumpToSnapshot($process);
-                } catch (ProcessFailedException $e) {
                     if ($console?->isVerbose()) {
-                        $console?->error($e->getMessage() . ' - Errno ' . $e->getCode());
+                        $console?->comment($command);
                     }
 
-                    throw new \RuntimeException("Unable to dump snapshot: $command");
-                }
+                    $process = Process::fromShellCommandline(
+                        $command,
+                        env: $this->password ? [static::PASSWORD_ENV_VARIABLE => $this->password] : null,
+                        timeout: null
+                    );
 
-                $this->addContentToSnapshot("\n\n");
-                $bar?->advance();
+                    try {
+                        $this->dumpToSnapshot($process);
+                    } catch (ProcessFailedException $e) {
+                        if ($console?->isVerbose()) {
+                            $console?->error($e->getMessage() . ' - Errno ' . $e->getCode());
+                        }
+
+                        throw new \RuntimeException("Unable to dump snapshot: $command");
+                    }
+
+                    $this->addContentToSnapshot("\n\n");
+                    $bar?->advance();
+                }
             }
+
+            $this->encryptedWriter?->finish();
+        } finally {
+            fclose($this->snapshotHandle);
+            $this->snapshotHandle  = null;
+            $this->encryptedWriter = null;
         }
 
         return $this;
@@ -314,32 +369,22 @@ class MySQLDump
      */
     protected function dumpToSnapshot(Process $process): void
     {
-        $file = fopen($this->snapshotFile->absolutePath(), 'ab');
-
-        if (!$file) {
-            throw new \RuntimeException('Unable to write file ' . $this->snapshotFile);
-        }
-
         // Each dump is a gzip member, it's possible to concatenate gzipped files.
         $deflate = $this->compress
             ? deflate_init(ZLIB_ENCODING_GZIP, ['level' => $this->compressionLevel])
             : null;
 
-        try {
-            $process->start();
+        $process->start();
 
-            foreach ($process->getIterator(Process::ITER_SKIP_ERR) as $data) {
-                $this->writeToSnapshot($file, $deflate ? deflate_add($deflate, $data, ZLIB_NO_FLUSH) : $data);
-            }
-
-            if ($deflate) {
-                $this->writeToSnapshot($file, deflate_add($deflate, '', ZLIB_FINISH));
-            }
-
-            $process->wait();
-        } finally {
-            fclose($file);
+        foreach ($process->getIterator(Process::ITER_SKIP_ERR) as $data) {
+            $this->writeToSnapshot($deflate ? deflate_add($deflate, $data, ZLIB_NO_FLUSH) : $data);
         }
+
+        if ($deflate) {
+            $this->writeToSnapshot(deflate_add($deflate, '', ZLIB_FINISH));
+        }
+
+        $process->wait();
 
         if (!$process->isSuccessful()) {
             throw new ProcessFailedException($process);
@@ -347,15 +392,20 @@ class MySQLDump
     }
 
     /**
-     * Write content to the snapshot file handle.
+     * Write content to the snapshot, encrypting it when required.
      *
-     * @param resource $file
      * @param string $content
      * @return void
      */
-    protected function writeToSnapshot($file, string $content): void
+    protected function writeToSnapshot(string $content): void
     {
-        if ($content !== '' && fwrite($file, $content) === false) {
+        if ($content === '') {
+            return;
+        }
+
+        if ($this->encryptedWriter) {
+            $this->encryptedWriter->write($content);
+        } elseif (fwrite($this->snapshotHandle, $content) === false) {
             throw new \RuntimeException('Unable to write file ' . $this->snapshotFile);
         }
     }
@@ -373,7 +423,7 @@ class MySQLDump
             $content = gzencode($content, 0);
         }
 
-        file_put_contents($this->snapshotFile->absolutePath(), $content, FILE_APPEND);
+        $this->writeToSnapshot($content);
     }
 
     /**

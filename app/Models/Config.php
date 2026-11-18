@@ -75,6 +75,23 @@ class Config implements \ArrayAccess
     }
 
     /**
+     * Retrieve the encryption settings, null when the encryption is disabled.
+     *
+     * @return array{key: string, method: string}|null
+     */
+    public function encryptionSettings(): ?array
+    {
+        if (empty($this->config['encryption']['key'])) {
+            return null;
+        }
+
+        return [
+            'key' => $this->config['encryption']['key'],
+            'method' => $this->config['encryption']['method'] ?? 'AES-128-CBC',
+        ];
+    }
+
+    /**
      * Parse environment.
      *
      * @return mixed

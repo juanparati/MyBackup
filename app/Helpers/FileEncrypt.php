@@ -17,6 +17,14 @@ class FileEncrypt
     ];
 
     /**
+     * Derive the encryption key from the passphrase.
+     */
+    public static function deriveKey(string $key): string
+    {
+        return substr(sha1($key, true), 0, 16);
+    }
+
+    /**
      * Encrypt file
      */
     public static function encrypt(
@@ -26,29 +34,20 @@ class FileEncrypt
         string $method = 'AES-128-CBC',
         ?OutputStyle $output = null
     ): bool {
-        $key = substr(sha1($key, true), 0, 16);
-
-        $iv = openssl_random_pseudo_bytes(16);
-
         $bar = $output ? FileProgressReader::make($filePath, $output) : null;
         $error = false;
 
         if ($fpOut = fopen($dest, 'w')) {
-            // Put the initialization vector to the beginning of the file
-            fwrite($fpOut, $iv);
+            $writer = new EncryptedWriter($fpOut, $key, $method);
 
             if ($fpIn = fopen($filePath, 'rb')) {
                 $block = 16 * static::ENCRYPTION_BLOCK_SIZES[$method];
 
                 while (! feof($fpIn)) {
-                    $plaintext = FileProgressReader::progressRead($fpIn, $block, $bar);
-                    $ciphertext = openssl_encrypt($plaintext, $method, $key, OPENSSL_RAW_DATA, $iv);
-
-                    // Use the first 16 bytes of the ciphertext as the next initialization vector
-                    $iv = substr($ciphertext, 0, 16);
-                    fwrite($fpOut, $ciphertext);
+                    $writer->write(FileProgressReader::progressRead($fpIn, $block, $bar));
                 }
 
+                $writer->finish();
                 fclose($fpIn);
             } else {
                 $error = true;
@@ -72,7 +71,7 @@ class FileEncrypt
         string $method = 'AES-128-CBC',
         ?OutputStyle $output = null
     ): bool {
-        $key = substr(sha1($key, true), 0, 16);
+        $key = static::deriveKey($key);
 
         $bar = $output ? FileProgressReader::make($filePath, $output) : null;
 
@@ -88,6 +87,12 @@ class FileEncrypt
                     // we have to read one block more for decrypting than for encrypting
                     $ciphertext = FileProgressReader::progressRead($fpIn, $blockSize, $bar);
                     $plaintext = openssl_decrypt($ciphertext, $method, $key, OPENSSL_RAW_DATA, $iv);
+
+                    // Wrong key or corrupted file
+                    if ($plaintext === false) {
+                        $error = true;
+                        break;
+                    }
 
                     // Use the first 16 bytes of the ciphertext as the next initialization vector
                     $iv = substr($ciphertext, 0, 16);

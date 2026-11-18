@@ -54,7 +54,7 @@ name: "Backup plan"
 catalog_file: "/tmp/catalog.sqlite"                   # Path to the snapshot catalog.
 snapshot_file: "/tmp/snapshot_{{numeric:{{datetime}}}}.sql" # Path to the snapshot.
 connection:
-   driver: "mysql"                                    # Supported drivers are "mysql" and "mariadb".                                                                                       
+   driver: "mysql"                                    # Supported drivers are "mysql" and "mariadb".                                        
    host: "localhost"
    port: 3306
    username: "root"
@@ -129,6 +129,7 @@ Defined by the option "**catalog_file**".
 
 It's a sqlite file that contains the historical list of the previous completed backups and the lock information.
 The lock information will avoid overlap two or more backup processes.
+When the process that created the lock is no longer running on the same host (e.g. it was killed), the lock is considered stale and it's removed automatically.
 
 Each backup plan requires a different catalog file.
 
@@ -139,6 +140,8 @@ The catalog file is created automatically when it's missing.
 Defined by the option "**snapshot_file**".
 
 It's the destination of the backup snapshot. In case that file is compressed and/or encrypted, the file may have additional extensions.
+
+While the backup is running, the snapshot is written into a file with the ".partial" extension, and it's renamed once the backup is completed. Partial files are removed when the backup fails.
 
 ### Connection
 
@@ -210,23 +213,25 @@ When this option is equal to `true` and the read-replica is not running or not r
 
 Defined by the option "**databases**".
 
-Define which databases or selected tables are dumped into the snapshot.
+Define which databases, tables and views are dumped into the snapshot.
 
 See [Backup plan and options for examples](#backup-plan-and-options).
 
 
 ### Snapshot Encryption
 
-Defined by option "**encryptation**".
+Defined by option "**encryption**".
 
 It will encrypt the snapshot file. The ".aes" extension will be added to the snapshot file name.
+
+The snapshot is encrypted while it's dumped, so the unencrypted snapshot is never written to disk.
 
 
 ### Notifications
 
 Defined by the option "**notifications**".
 
-It defines the notifications methods so backups are reported when the process is finished.
+It defines the notifications methods so backups are reported when the process is finished or when it fails.
 
 Only "slack" and "mail" methods are available, and both methods can be used at the same time.
 
