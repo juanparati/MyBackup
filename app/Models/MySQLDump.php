@@ -85,9 +85,24 @@ class MySQLDump
     protected array $tables = [];
 
     /**
+     * Views grouped by database.
+     */
+    protected array $views = [];
+
+    /**
      * Dump locations.
      */
     protected array $locations = [];
+
+    /**
+     * Text lines added at the beginning of the snapshot.
+     */
+    protected array $beginText = [];
+
+    /**
+     * Text lines added at the end of the snapshot.
+     */
+    protected array $endText = [];
 
     /**
      * Set a password.
@@ -224,6 +239,30 @@ class MySQLDump
     }
 
     /**
+     * Set the text added at the beginning of the snapshot, each element is a line.
+     *
+     * @return $this
+     */
+    public function setBeginText(string|array $lines): static
+    {
+        $this->beginText = is_array($lines) ? $lines : [$lines];
+
+        return $this;
+    }
+
+    /**
+     * Set the text added at the end of the snapshot, each element is a line.
+     *
+     * @return $this
+     */
+    public function setEndText(string|array $lines): static
+    {
+        $this->endText = is_array($lines) ? $lines : [$lines];
+
+        return $this;
+    }
+
+    /**
      * Add tables to ignore.
      *
      * @return $this
@@ -253,13 +292,29 @@ class MySQLDump
      *
      * @return $this
      */
-    public function addTable(string $database, string $table, ?string $where = null): static
+    public function addTable(string $database, string $table, ?string $where = null, bool $onlyStruct = false): static
     {
         $this->tables[$database . ' ' . $table] = [
-            'database' => $database,
-            'table'    => $table,
-            'where'    => $where,
+            'database'    => $database,
+            'table'       => $table,
+            'where'       => $where,
+            'only_struct' => $onlyStruct,
         ];
+
+        return $this;
+    }
+
+    /**
+     * Add view.
+     *
+     * The views of a database are dumped together after its tables, so mysqldump
+     * resolves the dependencies between them.
+     *
+     * @return $this
+     */
+    public function addView(string $database, string $view): static
+    {
+        $this->views[$database][$view] = $view;
 
         return $this;
     }
@@ -313,6 +368,10 @@ class MySQLDump
             $bar          = $console?->createProgressBar(count(Arr::flatten($dumpCommands)) + 1);
             $bar?->advance();
 
+            if ($this->beginText) {
+                $this->addContentToSnapshot($this->formatText($this->beginText) . "\n");
+            }
+
             foreach ($dumpCommands as $database => $commands) {
 
                 if ($this->locations[$database] ?? null) {
@@ -344,6 +403,10 @@ class MySQLDump
                     $this->addContentToSnapshot("\n\n");
                     $bar?->advance();
                 }
+            }
+
+            if ($this->endText) {
+                $this->addContentToSnapshot($this->formatText($this->endText));
             }
 
             $this->encryptedWriter?->finish();
@@ -427,11 +490,25 @@ class MySQLDump
     }
 
     /**
-     * Generate commands for tables.
+     * Format text lines replacing the placeholders.
+     *
+     * @param array $lines
+     * @return string
+     */
+    protected function formatText(array $lines): string
+    {
+        return implode('', array_map(
+            fn($line) => (new Placeholder)->replace((string) $line) . "\n",
+            $lines
+        ));
+    }
+
+    /**
+     * Generate commands for tables and views.
      */
     protected function generateCommandForTables(): array
     {
-        if (!$this->tables) {
+        if (!$this->tables && !$this->views) {
             return [];
         }
 
@@ -447,11 +524,26 @@ class MySQLDump
                 $currentCommand .= ' ' . implode(' ', $this->databaseOptions[$tableRecord['database']]);
             }
 
-            if ($tableRecord['where']) {
+            // The where condition is not required when the data is not dumped
+            if ($tableRecord['only_struct']) {
+                $currentCommand .= ' --no-data';
+            } elseif ($tableRecord['where']) {
                 $currentCommand .= ' --where=' . escapeshellarg((new Placeholder)->replace($tableRecord['where']));
             }
 
             $currentCommand .= ' ' . $tableRecord['database'] . ' ' . $tableRecord['table'];
+        }
+
+        // Views are dumped by a single command after the tables of the same database
+        foreach ($this->views as $database => $views) {
+            $commands[$database]['views'] = $command;
+            $currentCommand               = &$commands[$database]['views'];
+
+            if ($this->databaseOptions[$database] ?? null) {
+                $currentCommand .= ' ' . implode(' ', $this->databaseOptions[$database]);
+            }
+
+            $currentCommand .= ' ' . $database . ' ' . implode(' ', $views);
         }
 
         return $commands;

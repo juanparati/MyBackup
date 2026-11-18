@@ -201,7 +201,9 @@ class BackupCommand extends CommandBase
             ->setHost($this->config->connection['host'])
             ->setPort($this->config->connection['port'])
             ->setUser($this->config->connection['username'] ?? null)
-            ->setPassword($this->config->connection['password'] ?? null);
+            ->setPassword($this->config->connection['password'] ?? null)
+            ->setBeginText($this->config->dump['begin'] ?? [])
+            ->setEndText($this->config->dump['end'] ?? []);
 
         if ($this->config->compress && is_int($this->config->compress)) {
             $dump->setCompressionLevel($this->config->compress);
@@ -239,12 +241,31 @@ class BackupCommand extends CommandBase
                 continue;
             }
 
+            $views = DBStatus::make()->views($db['database']);
+            $dbViews = [];
+
             foreach ($db['tables'] as $table) {
-                $dump->addTable($db['database'], $table['table'], $table['where']);
+                if (in_array($table['table'], $views, true)) {
+                    $dbViews[] = $table['table'];
+
+                    continue;
+                }
+
+                $dump->addTable($db['database'], $table['table'], $table['where'], $table['only_struct']);
                 $planList[] = [
                     'num' => count($planList) + 1,
                     'database' => $db['database'],
-                    'table' => $table['table'],
+                    'table' => $table['table'].($table['only_struct'] ? ' (structure only)' : ''),
+                ];
+            }
+
+            // Views are dumped together after the tables, so mysqldump resolves the dependencies between them
+            foreach ($dbViews as $view) {
+                $dump->addView($db['database'], $view);
+                $planList[] = [
+                    'num' => count($planList) + 1,
+                    'database' => $db['database'],
+                    'table' => $view.' (view)',
                 ];
             }
         }
@@ -356,6 +377,7 @@ class BackupCommand extends CommandBase
             foreach (($db[$currentList['database']]['tables'] ?? []) as $kTable => $table) {
                 $currentList['tables'][$kTable] = [
                     'where' => null,
+                    'only_struct' => false,
                 ];
 
                 $currentTable = &$currentList['tables'][$kTable];
@@ -368,6 +390,7 @@ class BackupCommand extends CommandBase
 
                 $currentTable['table'] = array_key_first($table);
                 $currentTable['where'] = $table[$currentTable['table']]['where'] ?? null;
+                $currentTable['only_struct'] = (bool) ($table[$currentTable['table']]['only_struct'] ?? false);
             }
         }
 

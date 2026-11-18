@@ -63,4 +63,19 @@ class DBStatus
 
         return $qry->fetch(PDO::FETCH_ASSOC)['VARIABLE_VALUE'] === 'ON';
     }
+
+    /**
+     * Retrieve the views of a database.
+     *
+     * @return string[]
+     */
+    public function views(string $database): array
+    {
+        $qry = $this->pdo
+            ->prepare("SELECT TABLE_NAME FROM information_schema.TABLES WHERE TABLE_SCHEMA = ? AND TABLE_TYPE = 'VIEW'");
+
+        $qry->execute([$database]);
+
+        return $qry->fetchAll(PDO::FETCH_COLUMN);
+    }
 }
