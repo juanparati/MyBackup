@@ -56,6 +56,8 @@ mybackup backup backup_plan.yaml
 
 ## Backup plan and options
 
+You can create your personal backup plan using the [MyBackup Configurator](https://juanparati.github.io/MyBackup/).
+
 An example of a complete backup plan may look like the following one:
 
 ```YAML
