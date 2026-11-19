@@ -1,0 +1,25 @@
+{
+    "name": "mybackup-configurer",
+    "version": "1.0.0",
+    "description": "Static page to create and edit MyBackup backup plan configurations",
+    "private": true,
+    "type": "module",
+    "source": "src/index.html",
+    "alias": {
+        "yaml": "yaml/browser/dist/index.js"
+    },
+    "scripts": {
+        "start": "parcel --no-hmr",
+        "build": "rm -rf dist && parcel build --public-url ./",
+        "typecheck": "tsc --noEmit",
+        "test": "node --test \"test/**/*.test.ts\""
+    },
+    "dependencies": {
+        "yaml": "^2.9.1"
+    },
+    "devDependencies": {
+        "@types/node": "^24.19.2",
+        "parcel": "^2.16.4",
+        "typescript": "^7.0.2"
+    }
+}

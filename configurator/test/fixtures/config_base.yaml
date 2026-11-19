@@ -1,0 +1,7 @@
+# MyBackup configuration
+name: "Test config"
+catalog_file: "catalog_test.sqlite"
+snapshot_file: "file.sql"
+encryption:
+  method: "AES-128-CBC"
+  key: "avzdljnuivnltest"

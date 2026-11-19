@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- Plans hold credentials: no connections and no third-party code, so nothing can be sent anywhere. -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src data:; connect-src 'none'; base-uri 'none'; form-action 'none'">
+    <title>MyBackup Configurer</title>
+    <meta name="description" content="Create and edit MyBackup backup plan configurations.">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%232563eb'/%3E%3Cpath d='M9 10c0-1.7 3.1-3 7-3s7 1.3 7 3v12c0 1.7-3.1 3-7 3s-7-1.3-7-3z' fill='none' stroke='white' stroke-width='2'/%3E%3Cpath d='M9 10c0 1.7 3.1 3 7 3s7-1.3 7-3M9 16c0 1.7 3.1 3 7 3s7-1.3 7-3' fill='none' stroke='white' stroke-width='2'/%3E%3C/svg%3E">
+    <link rel="stylesheet" href="./styles.css">
+    <script type="module" src="./main.ts"></script>
+</head>
+<body>
+    <header class="topbar">
+        <h1>MyBackup <span>Configurer</span></h1>
+        <nav class="toolbar" aria-label="Backup plan">
+            <button type="button" id="new">New</button>
+            <button type="button" id="example">Load example</button>
+            <button type="button" id="import" class="primary">Import YAML…</button>
+        </nav>
+    </header>
+
+    <main class="layout">
+        <div class="form-column">
+            <div id="notice" class="notice" role="status" hidden></div>
+            <form id="form" autocomplete="off" novalidate></form>
+            <p class="footnote">
+                Everything runs in your browser and nothing is uploaded. The draft is kept in this tab until you close it, without secrets.
+                Run <code>mybackup backup backup_plan.yaml --dry</code> to check a plan before using it.
+            </p>
+        </div>
+
+        <aside class="preview" aria-labelledby="preview-title">
+            <div class="preview-head">
+                <h2 id="preview-title">backup_plan.yaml</h2>
+                <div class="preview-buttons">
+                    <button type="button" id="reveal" class="reveal" aria-pressed="false">Show secrets</button>
+                    <button type="button" id="copy">Copy</button>
+                    <button type="button" id="download" class="primary">Download</button>
+                </div>
+            </div>
+            <div id="issues" aria-live="polite"></div>
+            <pre id="yaml" tabindex="0" aria-label="Generated YAML"></pre>
+        </aside>
+    </main>
+
+    <datalist id="filesystem-names"></datalist>
+</body>
+</html>
